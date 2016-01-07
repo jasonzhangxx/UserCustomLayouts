@@ -43,6 +43,7 @@
     self = [super init];
     if (self) {
         _rootList = [[NSMutableArray alloc] init];
+        _viewMap = [[NSMutableDictionary alloc] init];
         LayoutRootNode* node = [[[LayoutRootNode alloc] initWithHandler:self view:view] autorelease];
         [_rootList addObject:node];
         
@@ -57,6 +58,7 @@
 - (void)dealloc
 {
     [_rootList release];
+    [_viewMap release];
     [_draggingPanel release];
     [super dealloc];
 }
@@ -92,7 +94,7 @@
     return NO;
 }
 
-- (void)handleDragEvent:(LayoutView*)sender view:(LayoutView *)view type:(NSEventType)type location:(NSPoint)locationInWindow
+- (void)handleMouseEvent:(LayoutView*)sender view:(LayoutView *)view type:(NSEventType)type location:(NSPoint)locationInWindow
 {
     switch (type) {
         case NSLeftMouseDown:
@@ -129,23 +131,32 @@
         //TODO targetView isn't in the tree
         return;
     }
-    //TODO 最边缘的边应向上取node
     LayoutNode* resizeNode = nil;
     while (targetNode != nil && targetNode.parentNode != targetNode.root) {
         if ((targetNode.parentNode.align & dir) > 0) {
-            resizeNode = targetNode;
-            break;
+            //filter node's edge
+            unsigned long idx = [targetNode.parentNode.subNodes indexOfObject:targetNode];
+            if ((dir & 0b0100) > 0) {
+                if (idx < targetNode.parentNode.subNodes.count-1) {//not the last
+                    resizeNode = targetNode;
+                    break;
+                }
+            }
+            else {
+                if (idx > 0) {//not the first
+                    resizeNode = targetNode;
+                    break;
+                }
+            }
         }
-        else {
-            targetNode = targetNode.parentNode;
-        }
+        targetNode = targetNode.parentNode;
     }
     if (resizeNode != nil) {
         [resizeNode.parentNode resizeSubNode:resizeNode variation:variation direction:dir];
     }
     else {
         //TODO cannot find node to resize
-        NSLog(@"resize error");
+        NSLog(@"cannot find node to resize");
     }
 }
 
@@ -182,8 +193,10 @@
         [targetNode.root.view addSubview:layoutView];
     }
     
+    LayoutContentNode* subNode = [[[LayoutContentNode alloc] initWithHandler:self view:layoutView] autorelease];
+    [_viewMap setObject:subNode forKey:[NSNumber numberWithUnsignedLong:layoutView.identifier]];//add relationship to viewmap
+    
     if ((targetNode.align & dir) > 0) {
-        LayoutContentNode* subNode = [[[LayoutContentNode alloc] initWithHandler:self view:layoutView] autorelease];
         [targetNode addSubNode:subNode direction:dir size:size relativeNode:relativeNode];
     }
     else {//shift down leaf node
@@ -191,7 +204,7 @@
         LayoutNode* combineNode = [[[LayoutNode alloc] initWithHandler:self] autorelease];
         [targetNode.parentNode replaceNode:targetNode withNode:combineNode];
         [combineNode addSubNode:targetNode direction:dir size:combineNode.frame.size];
-        LayoutContentNode* subNode = [[[LayoutContentNode alloc] initWithHandler:self view:layoutView] autorelease];
+
         [combineNode addSubNode:subNode direction:dir size:size relativeNode:relativeNode];
         [targetNode release];
     }
@@ -210,6 +223,7 @@
     [[node retain] autorelease];
     LayoutNode* parentNode = node.parentNode;
     [node removeFromParent];//rootNode's virtualNode do nothing
+    [_viewMap removeObjectForKey:[NSNumber numberWithUnsignedLong:layoutView.identifier]];//remove relationship from viewmap
     
     if (parentNode.parentNode == parentNode.root) {//root's virtualNode
         if (parentNode.root.autoRemovedWhenEmpty == YES && parentNode.subNodes.count == 0) {
@@ -378,30 +392,7 @@
 #pragma mark -
 - (LayoutContentNode*)findAssociatedNode:(LayoutView *)view
 {
-    for (int i=0; i<_rootList.count; i++) {
-        LayoutContentNode* n = [self findAssociatedNode:view node:_rootList[i]];
-        if (n != nil) {
-            return n;
-        }
-    }
-    return nil;
-}
-
-- (LayoutContentNode*)findAssociatedNode:(LayoutView*)view node:(LayoutNode*)node
-{
-    if ([node isKindOfClass:[LayoutContentNode class]] &&
-        ((LayoutContentNode*)node).view == view) {
-        return (LayoutContentNode*)node;
-    }
-    else {
-        for (int i=0; i<node.subNodes.count; i++) {
-            LayoutContentNode* n = [self findAssociatedNode:view node:node.subNodes[i]];
-            if (n != nil) {
-                return n;
-            }
-        }
-        return nil;
-    }
+    return [_viewMap objectForKey:[NSNumber numberWithUnsignedLong:view.identifier]];
 }
 
 - (LayoutNode*)findeFirstResponsedNode:(NSPoint)location

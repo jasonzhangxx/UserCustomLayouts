@@ -22,6 +22,7 @@ extern const float LayoutPlacedInitializeProportion;
     LayoutRelativeDirection _resizeDirection;
 }
 
+@property (nonatomic, readonly) NSUInteger identifier;
 @property (nonatomic, assign) LayoutHandler* handler;
 
 -(instancetype)initWithHandler:(LayoutHandler*)handler;

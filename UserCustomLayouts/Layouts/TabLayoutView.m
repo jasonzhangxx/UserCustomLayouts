@@ -10,6 +10,7 @@
 
 @implementation TabLayoutView
 
+//debug
 - (void)drawRect:(NSRect)aRect
 {
     [[NSColor redColor] set];

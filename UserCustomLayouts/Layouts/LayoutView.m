@@ -11,10 +11,23 @@
 
 @implementation LayoutView
 
+//debug
+- (void)drawRect:(NSRect)aRect
+{
+    [[NSColor greenColor] set];
+    NSBezierPath *bp = [NSBezierPath bezierPathWithRect:[self bounds]];
+    [bp stroke];
+    
+    NSString* str = [NSString stringWithFormat:@"View%lu",(unsigned long)_id];
+    [str drawAtPoint:NSZeroPoint withAttributes:nil];
+}
+
 const float LayoutPlacedInitializeProportion = .3;
 const float LayoutBorderWidth = 4;
 
 static NSUInteger layoutViewIdx = 0;
+
+@synthesize identifier = _id;
 
 - (instancetype) init
 {
@@ -35,28 +48,9 @@ static NSUInteger layoutViewIdx = 0;
     return self;
 }
 
-- (void)resetCursorRects
-{
-    //TODO rootView最边缘不需要显示
-    [self addCursorRect:NSMakeRect(0, 0, LayoutBorderWidth, self.frame.size.height) cursor:[NSCursor resizeLeftRightCursor]];
-    [self addCursorRect:NSMakeRect(self.frame.size.width-LayoutBorderWidth, 0, LayoutBorderWidth, self.frame.size.height) cursor:[NSCursor resizeLeftRightCursor]];
-    [self addCursorRect:NSMakeRect(0, 0, self.frame.size.width, LayoutBorderWidth) cursor:[NSCursor resizeUpDownCursor]];
-    [self addCursorRect:NSMakeRect(0, self.frame.size.height-LayoutBorderWidth, self.frame.size.width, LayoutBorderWidth) cursor:[NSCursor resizeUpDownCursor]];
-}
-
 - (NSSize)layoutMinSize
 {
     return NSZeroSize;
-}
-
-- (void)drawRect:(NSRect)aRect
-{
-    [[NSColor greenColor] set];
-    NSBezierPath *bp = [NSBezierPath bezierPathWithRect:[self bounds]];
-    [bp stroke];
-    
-    NSString* str = [NSString stringWithFormat:@"View%lu",(unsigned long)_id];
-    [str drawAtPoint:NSZeroPoint withAttributes:nil];
 }
 
 #pragma mark - mouse handle
@@ -65,22 +59,22 @@ static NSUInteger layoutViewIdx = 0;
     //handler resize event
     _resizing = NO;
     NSPoint location = [self convertPoint:theEvent.locationInWindow fromView:nil];
-    if (ABS(location.x) <= LayoutBorderWidth) {
+    if (location.x <= LayoutBorderWidth && [self isResizeAvailable:LayoutRelativeDirectionLeft]) {
         _resizing = YES;
         _resizeDirection = LayoutRelativeDirectionLeft;
         _mouseDownRelativeLocation = location;
     }
-    else if (ABS(location.x-self.bounds.size.width) <= LayoutBorderWidth) {
+    else if (self.bounds.size.width-location.x <= LayoutBorderWidth && [self isResizeAvailable:LayoutRelativeDirectionRight]) {
         _resizing = YES;
         _resizeDirection = LayoutRelativeDirectionRight;
         _mouseDownRelativeLocation = NSMakePoint(_frame.size.width-location.x, location.y);
     }
-    else if (ABS(location.y) <= LayoutBorderWidth) {
+    else if (location.y <= LayoutBorderWidth && [self isResizeAvailable:LayoutRelativeDirectionBottom]) {
         _resizing = YES;
         _resizeDirection = LayoutRelativeDirectionBottom;
         _mouseDownRelativeLocation = location;
     }
-    else if (ABS(location.y-self.bounds.size.height) <= LayoutBorderWidth) {
+    else if (self.bounds.size.height-location.y <= LayoutBorderWidth && [self isResizeAvailable:LayoutRelativeDirectionTop]) {
         _resizing = YES;
         _resizeDirection = LayoutRelativeDirectionTop;
         _mouseDownRelativeLocation = NSMakePoint(location.x, _frame.size.height-location.y);
@@ -88,7 +82,7 @@ static NSUInteger layoutViewIdx = 0;
     
     //handle drag event
     if (_resizing == NO) {
-        [_handler handleDragEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
+        [_handler handleMouseEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
     }
 }
 
@@ -125,20 +119,59 @@ static NSUInteger layoutViewIdx = 0;
         }
     }
     else {
-        [_handler handleDragEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
+        [_handler handleMouseEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
     }
 }
 
 - (void)mouseUp:(NSEvent *)theEvent
 {
     if (_resizing == NO) {
-        [_handler handleDragEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
+        [_handler handleMouseEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
     }
     
     _resizing = NO;
 }
 
-#pragma mark - layout responser
+#pragma mark - resize
+- (BOOL)isResizeAvailable:(LayoutRelativeDirection)dir
+{
+    switch (dir) {
+        case LayoutRelativeDirectionLeft: {
+            return _frame.origin.x>=0.01;
+        }
+        case LayoutRelativeDirectionRight: {
+            return self.superview.bounds.size.width-(_frame.origin.x+_frame.size.width)>=0.01;
+        }
+        case LayoutRelativeDirectionBottom: {
+            return _frame.origin.y>=0.01;
+        }
+        case LayoutRelativeDirectionTop: {
+            return self.superview.bounds.size.height-(_frame.origin.y+_frame.size.height)>=0.01;
+        }
+        default:
+            break;
+    }
+    return NO;
+}
+
+- (void)resetCursorRects
+{
+    //filter parentView's edge
+    if ([self isResizeAvailable:LayoutRelativeDirectionLeft] == YES) {
+        [self addCursorRect:NSMakeRect(0, 0, LayoutBorderWidth, self.frame.size.height) cursor:[NSCursor resizeLeftRightCursor]];
+    }
+    if ([self isResizeAvailable:LayoutRelativeDirectionRight]) {
+        [self addCursorRect:NSMakeRect(self.frame.size.width-LayoutBorderWidth, 0, LayoutBorderWidth, self.frame.size.height) cursor:[NSCursor resizeLeftRightCursor]];
+    }
+    if ([self isResizeAvailable:LayoutRelativeDirectionBottom]) {
+        [self addCursorRect:NSMakeRect(0, 0, self.frame.size.width, LayoutBorderWidth) cursor:[NSCursor resizeUpDownCursor]];
+    }
+    if ([self isResizeAvailable:LayoutRelativeDirectionTop]) {
+        [self addCursorRect:NSMakeRect(0, self.frame.size.height-LayoutBorderWidth, self.frame.size.width, LayoutBorderWidth) cursor:[NSCursor resizeUpDownCursor]];
+    }
+}
+
+#pragma mark - layout drag responser
 - (LayoutRelativeDirection)checkLayoutPlacedDirection:(NSPoint)location
 {
     if (!NSPointInRect(location, self.frame)) {

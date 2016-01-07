@@ -11,6 +11,7 @@
 
 @class LayoutNode;
 @class LayoutRootNode;
+@class LayoutContentNode;
 @class LayoutView;
 
 typedef enum : NSUInteger {
@@ -52,7 +53,6 @@ typedef enum : NSUInteger {
 
 @protocol LayoutDragResponserDelegate
 
-@optional
 - (void)onLayoutDragIn;
 - (void)onLayoutDragOut;
 - (BOOL)onLayoutDragMove:(LayoutDragEvent*)event;
@@ -63,6 +63,7 @@ typedef enum : NSUInteger {
 @interface LayoutHandler : NSObject <NSWindowDelegate>
 {
     NSMutableArray<LayoutRootNode*>* _rootList;
+    NSMutableDictionary<NSNumber*, LayoutContentNode*>* _viewMap;
     
     LayoutDragState _dragState;
     LayoutView* _dragSender;
@@ -76,7 +77,7 @@ typedef enum : NSUInteger {
 -(id)initWithView:(NSView*)view;
 -(LayoutRootNode*)firstResponsedRoot;
 
--(void)handleDragEvent:(LayoutView*)sender view:(LayoutView*)sender type:(NSEventType)type location:(NSPoint) locationInWindow;
+-(void)handleMouseEvent:(LayoutView*)sender view:(LayoutView*)view type:(NSEventType)type location:(NSPoint) locationInWindow;
 -(void)handleResizeEvent:(LayoutView*)view variation:(float)variation direction:(LayoutRelativeDirection)dir;
 
 -(void)addLayoutView:(LayoutView*)layoutView to:(LayoutView*)targetView direction:(LayoutRelativeDirection)dir size:(NSSize)size;
