@@ -9,9 +9,42 @@
 #import "LayoutView.h"
 #import "TabLayoutContentInterface.h"
 
-@interface TabLayoutView : LayoutView
+@class TabLayoutViewTab;
+
+@protocol TabLayoutViewTabDelegate
+
+- (void)tabMouseDown:(TabLayoutViewTab*)sender event:(NSEvent *)theEvent;
+- (void)tabMouseDragged:(TabLayoutViewTab*)sender event:(NSEvent *)theEvent;
+- (void)tabMouseUp:(TabLayoutViewTab*)sender event:(NSEvent *)theEvent;
+
+@end
+
+@interface TabLayoutViewTab : NSView
+
+@property(nonatomic, retain) NSView<TabLayoutContentInterface>* contentView;
+@property(nonatomic, assign) id<TabLayoutViewTabDelegate> delegate;
+@property(nonatomic, assign) BOOL highlighted;
+-(NSString*)tabTitle;
+
+- (instancetype)initWithContentView:(NSView<TabLayoutContentInterface>*)view;
+
+@end
+
+@interface TabLayoutView : LayoutView <TabLayoutViewTabDelegate>
 {
-    NSMutableArray<NSView<TabLayoutContentInterface>*>* _contentViews;
+    NSMutableArray<TabLayoutViewTab*>* _tabs;
+    NSView* _tabView;
+    TabLayoutViewTab* _selectedTab;
+    TabLayoutViewTab* _draggingTab;
 }
+
+-(NSArray<TabLayoutViewTab*>*)tabs;
+@property(nonatomic, readonly) TabLayoutViewTab* draggingTab;
+
+-(instancetype)initWithHandler:(LayoutHandler*)handler view:(NSView<TabLayoutContentInterface>*)view;
+
+- (void)setSelectedTab:(TabLayoutViewTab*)tab;
+- (void)insertContentView:(NSView<TabLayoutContentInterface>*)view index:(int)index highlighted:(BOOL)highlighted;
+- (void)removeTab:(TabLayoutViewTab*)tab;
 
 @end

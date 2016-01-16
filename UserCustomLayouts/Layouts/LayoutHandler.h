@@ -30,24 +30,25 @@ typedef enum : NSUInteger {
     LayoutRelativeDirectionRight = 0b0110,    //6
 } LayoutRelativeDirection;
 
+@interface LayoutDragEvent : NSObject
+
+@property(nonatomic, assign) LayoutView* sender;
+@property(nonatomic, assign) NSPoint location;//location in rootView
+@property(nonatomic, assign) LayoutDraggingPanel* panel;
+
++(LayoutDragEvent*)eventWithSender:(LayoutView*)sender location:(NSPoint)location panel:(LayoutDraggingPanel*)panel;
+
+@end
+
 @protocol LayoutDragSenderDelegate
+
+- (LayoutView*)layoutWillMove;
 
 @optional
 - (void)layoutDragDidBegin;
 - (void)layoutDragDidDragging;
 - (void)layoutDragDidEnd;
 - (void)layoutDragDidCancel;
-
-@end
-
-@interface LayoutDragEvent : NSObject
-
-@property(nonatomic, assign) LayoutView* sender;
-@property(nonatomic, retain) LayoutView* view;
-@property(nonatomic, assign) NSPoint location;
-@property(nonatomic, assign) LayoutDraggingPanel* panel;
-
-+(LayoutDragEvent*)eventWithSender:(LayoutView*)sender view:(LayoutView*)view location:(NSPoint)location panel:(LayoutDraggingPanel*)panel;
 
 @end
 
@@ -67,7 +68,6 @@ typedef enum : NSUInteger {
     
     LayoutDragState _dragState;
     LayoutView* _dragSender;
-    LayoutView* _draggingView;
     LayoutNode* _focusedNode;
     LayoutDraggingPanel* _draggingPanel;
 }
@@ -77,7 +77,7 @@ typedef enum : NSUInteger {
 -(id)initWithView:(NSView*)view;
 -(LayoutRootNode*)firstResponsedRoot;
 
--(void)handleMouseEvent:(LayoutView*)sender view:(LayoutView*)view type:(NSEventType)type location:(NSPoint) locationInWindow;
+-(void)handleMouseEvent:(LayoutView*)sender type:(LayoutDragState)type location:(NSPoint) locationInWindow;
 -(void)handleResizeEvent:(LayoutView*)view variation:(float)variation direction:(LayoutRelativeDirection)dir;
 
 -(void)addLayoutView:(LayoutView*)layoutView to:(LayoutView*)targetView direction:(LayoutRelativeDirection)dir size:(NSSize)size;

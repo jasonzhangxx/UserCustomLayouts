@@ -15,6 +15,7 @@
 - (void)snapshotView:(NSView*)view;
 
 - (void)restoreToOrigin:(BOOL)animated;
+//TODO 优化停靠显示
 - (void)placeToView:(NSView*)view frame:(NSRect)frame animated:(BOOL)animated;
 - (void)moveToLocation:(NSPoint)locationInScreen animated:(BOOL)animated;
 

@@ -11,10 +11,29 @@
 
 #import "LayoutView.h"
 #import "LayoutRootNode.h"
+#import "TabLayoutView.h"
 
 @interface AppDelegate ()
 
 @property (assign) IBOutlet NSWindow *window;
+@end
+
+@interface TestView : NSView <TabLayoutContentInterface>
+@property(nonatomic, retain) NSString* title;
+@end
+
+@implementation TestView
+
+- (NSSize)layoutMinSize
+{
+    return NSZeroSize;
+}
+
+- (NSString*)layoutTitle
+{
+    return _title;
+}
+
 @end
 
 @implementation AppDelegate
@@ -38,6 +57,20 @@
     
     LayoutView* view5 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
     [_hanlder addLayoutView:view5 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionBottom size:NSMakeSize(200, 200) relativeNode:nil];
+    
+    
+    TestView* content1 = [[[TestView alloc] init] autorelease];
+    content1.title = @"Tab1";
+    TestView* content2 = [[[TestView alloc] init] autorelease];
+    content2.title = @"Tab2";
+    TestView* content3 = [[[TestView alloc] init] autorelease];
+    content3.title = @"Tab3";
+    TabLayoutView *tabView1 = [[[TabLayoutView alloc] initWithHandler:_hanlder view:content1] autorelease];
+    [tabView1 insertContentView:content2 index:0 highlighted:YES];
+    [tabView1 insertContentView:content3 index:0 highlighted:YES];
+    [_hanlder addLayoutView:tabView1 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionBottom size:NSMakeSize(200, 200) relativeNode:nil];
+    
+
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {

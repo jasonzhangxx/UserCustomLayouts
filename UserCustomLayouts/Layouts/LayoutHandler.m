@@ -14,14 +14,18 @@
 
 @implementation LayoutDragEvent
 
-+ (LayoutDragEvent*)eventWithSender:(LayoutView*)sender view:(LayoutView*)view location:(NSPoint)location panel:(LayoutDraggingPanel *)panel
++ (LayoutDragEvent*)eventWithSender:(LayoutView*)sender location:(NSPoint)location panel:(LayoutDraggingPanel *)panel
 {
     LayoutDragEvent* event = [[[LayoutDragEvent alloc] init] autorelease];
-    event.view = view;
     event.sender = sender;
     event.location = location;
     event.panel = panel;
     return event;
+}
+
+- (void)dealloc
+{
+    [super dealloc];
 }
 
 @end
@@ -83,7 +87,7 @@
                 [_rootList insertObject:root atIndex:0];
                 [root release];
                 [root.view.window makeKeyAndOrderFront:nil];
-                NSLog(@"root change");
+//                NSLog(@"root change");
                 return YES;
             }
             else {
@@ -94,25 +98,25 @@
     return NO;
 }
 
-- (void)handleMouseEvent:(LayoutView*)sender view:(LayoutView *)view type:(NSEventType)type location:(NSPoint)locationInWindow
+- (void)handleMouseEvent:(LayoutView*)sender type:(LayoutDragState)type location:(NSPoint)locationInWindow
 {
     switch (type) {
-        case NSLeftMouseDown:
+        case LayoutDragStateBegin:
         {
             if (_dragState != LayoutDragStateUnkown) {
                 [self cancelDragging];
             }
-            [self startDragging:sender view:view];
+            [self startDragging:sender];
             break;
         }
-        case NSLeftMouseDragged:
+        case LayoutDragStateDraging:
         {
             if(_dragState == LayoutDragStateBegin || _dragState == LayoutDragStateDraging) {
                 [self continueDragging:locationInWindow];
             }
             break;
         }
-        case NSLeftMouseUp:
+        case LayoutDragStateEnd:
         {
             if (_dragState == LayoutDragStateDraging) {
                 [self finishDragging:locationInWindow];
@@ -220,15 +224,13 @@
     
     [layoutView removeFromSuperview];
     
-    [[node retain] autorelease];
     LayoutNode* parentNode = node.parentNode;
-    [node removeFromParent];//rootNode's virtualNode do nothing
     [_viewMap removeObjectForKey:[NSNumber numberWithUnsignedLong:layoutView.identifier]];//remove relationship from viewmap
+    [node removeFromParent];//rootNode's virtualNode do nothing
     
     if (parentNode.parentNode == parentNode.root) {//root's virtualNode
         if (parentNode.root.autoRemovedWhenEmpty == YES && parentNode.subNodes.count == 0) {
             [parentNode.root.view.window close];
-            [_rootList removeObject:parentNode.root];
         }
     }
     //subNodes.count would not be 0 expect virtualNode, just check 1
@@ -241,24 +243,26 @@
 
 - (void)createNewLayoutWindow:(LayoutView *)layoutView location:(NSPoint)locationInScreen
 {
+    if (layoutView == nil) {
+        //TODO
+        return;
+    }
     NSWindow* newWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, layoutView.bounds.size.width, layoutView.bounds.size.height) styleMask:(NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask) backing:NSBackingStoreBuffered defer:YES];
     [newWindow setFrame:NSMakeRect(locationInScreen.x-newWindow.frame.size.width/2.0, locationInScreen.y-newWindow.frame.size.height/2.0, newWindow.frame.size.width, newWindow.frame.size.height) display:YES];
     newWindow.delegate = self;
     newWindow.hasShadow = YES;
     
-    LayoutRootNode* root = [[LayoutRootNode alloc] initWithHandler:self view:newWindow.contentView];
+    LayoutRootNode* root = [[[LayoutRootNode alloc] initWithHandler:self view:newWindow.contentView] autorelease];
     root.autoRemovedWhenEmpty = YES;
     [_rootList insertObject:root atIndex:0];
-    [self removeLayoutView:layoutView];
     [self addLayoutView:layoutView toNode:root.virtualNode direction:LayoutRelativeDirectionBottom size:NSZeroSize relativeNode:nil];
     [newWindow makeKeyAndOrderFront:nil];
 }
 
 #pragma mark - dragging handle
-- (void)startDragging:(LayoutView*)sender view:(LayoutView*)view
+- (void)startDragging:(LayoutView*)sender
 {
     _dragSender = sender;
-    _draggingView = view;
     _focusedNode = nil;
     _dragState = LayoutDragStateBegin;
     
@@ -289,7 +293,7 @@
     BOOL processed = NO;
     if (_focusedNode != nil) {
         NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:locationInResponsedRootWindow fromView:nil];
-        LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender view:_draggingView location:convertedLocation panel:_draggingPanel];
+        LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation panel:_draggingPanel];
         processed = [_focusedNode.responser onLayoutDragMove:event];
     }
     else {
@@ -297,7 +301,7 @@
     }
     
     if (_draggingPanel.isVisible == NO) {
-        [_draggingPanel snapshotView:_draggingView];
+        [_draggingPanel snapshotView:_dragSender];
         [_draggingPanel restoreToOrigin:NO];
     }
     
@@ -330,7 +334,7 @@
     BOOL processed = NO;
     if (_focusedNode != nil) {
         NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:locationInResponsedRootWindow fromView:nil];
-        LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender view:_draggingView location:convertedLocation panel:_draggingPanel];
+        LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation panel:_draggingPanel];
         processed = [_focusedNode.responser onLayoutDragEndInside:event];
     }
     else {
@@ -339,7 +343,11 @@
     
     if (processed == NO) {
         //create new window
-        [self createNewLayoutWindow:_draggingView location:locationInScreen];
+        LayoutView* view = [_dragSender layoutWillMove];
+        if (view != nil) {
+            [self.firstResponsedRoot.view.window resetCursorRects];//reset cursorRects before change key window
+            [self createNewLayoutWindow:view location:locationInScreen];
+        }
     }
     
     if (_dragSender != nil) {
@@ -348,7 +356,6 @@
         }
     }
     _dragSender = nil;
-    _draggingView = nil;
     _focusedNode = nil;
     _dragState = LayoutDragStateUnkown;
     [_draggingPanel close];
@@ -365,7 +372,6 @@
         }
     }
     _dragSender = nil;
-    _draggingView = nil;
     _focusedNode = nil;
     _dragState = LayoutDragStateUnkown;
     [_draggingPanel close];
@@ -382,6 +388,16 @@
     else {
         for (int i=0; i<_rootList.count; i++) {
             if (notification.object == _rootList[i].view.window) {
+                NSMutableArray<LayoutNode*>* nodes = [NSMutableArray arrayWithArray:_rootList[i].virtualNode.subNodes];
+                while (nodes.count > 0) {
+                    if (nodes[0].subNodes.count > 0) {
+                        [nodes addObjectsFromArray:nodes[0].subNodes];
+                    }
+                    if ([nodes[0] isKindOfClass:[LayoutContentNode class]]) {
+                        [_viewMap removeObjectForKey:[NSNumber numberWithUnsignedLong:((LayoutContentNode*)nodes[0]).view.identifier]];//remove relationship from viewmap
+                    }
+                    [nodes removeObjectAtIndex:0];
+                }
                 [_rootList removeObjectAtIndex:i];
                 break;
             }

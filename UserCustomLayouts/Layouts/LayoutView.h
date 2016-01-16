@@ -17,13 +17,14 @@ extern const float LayoutPlacedInitializeProportion;
 {
     NSUInteger _id;
     
+    LayoutHandler* _handler;
     BOOL _resizing;
     NSPoint _mouseDownRelativeLocation;
     LayoutRelativeDirection _resizeDirection;
 }
 
 @property (nonatomic, readonly) NSUInteger identifier;
-@property (nonatomic, assign) LayoutHandler* handler;
+@property (nonatomic, readonly) LayoutHandler* handler;
 
 -(instancetype)initWithHandler:(LayoutHandler*)handler;
 

@@ -28,6 +28,7 @@ const float LayoutBorderWidth = 4;
 static NSUInteger layoutViewIdx = 0;
 
 @synthesize identifier = _id;
+@synthesize handler = _handler;
 
 - (instancetype) init
 {
@@ -46,6 +47,11 @@ static NSUInteger layoutViewIdx = 0;
         _handler = handler;
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [super dealloc];
 }
 
 - (NSSize)layoutMinSize
@@ -80,9 +86,8 @@ static NSUInteger layoutViewIdx = 0;
         _mouseDownRelativeLocation = NSMakePoint(location.x, _frame.size.height-location.y);
     }
     
-    //handle drag event
     if (_resizing == NO) {
-        [_handler handleMouseEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
+        [_handler handleMouseEvent:self type:LayoutDragStateBegin location:theEvent.locationInWindow];
     }
 }
 
@@ -118,15 +123,16 @@ static NSUInteger layoutViewIdx = 0;
                 break;
         }
     }
-    else {
-        [_handler handleMouseEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
+    
+    if (_resizing == NO) {
+        [_handler handleMouseEvent:self type:LayoutDragStateDraging location:theEvent.locationInWindow];
     }
 }
 
 - (void)mouseUp:(NSEvent *)theEvent
 {
     if (_resizing == NO) {
-        [_handler handleMouseEvent:self view:self type:theEvent.type location:theEvent.locationInWindow];
+        [_handler handleMouseEvent:self type:LayoutDragStateEnd location:theEvent.locationInWindow];
     }
     
     _resizing = NO;
@@ -156,6 +162,7 @@ static NSUInteger layoutViewIdx = 0;
 
 - (void)resetCursorRects
 {
+    NSLog(@"11");
     //filter parentView's edge
     if ([self isResizeAvailable:LayoutRelativeDirectionLeft] == YES) {
         [self addCursorRect:NSMakeRect(0, 0, LayoutBorderWidth, self.frame.size.height) cursor:[NSCursor resizeLeftRightCursor]];
@@ -169,6 +176,14 @@ static NSUInteger layoutViewIdx = 0;
     if ([self isResizeAvailable:LayoutRelativeDirectionTop]) {
         [self addCursorRect:NSMakeRect(0, self.frame.size.height-LayoutBorderWidth, self.frame.size.width, LayoutBorderWidth) cursor:[NSCursor resizeUpDownCursor]];
     }
+}
+
+#pragma mark - layout sender delegate
+- (LayoutView*)layoutWillMove
+{
+    [[self retain] autorelease];
+    [_handler removeLayoutView:self];
+    return self;
 }
 
 #pragma mark - layout drag responser
@@ -238,7 +253,7 @@ static NSUInteger layoutViewIdx = 0;
 
 - (BOOL)onLayoutDragMove:(LayoutDragEvent *)event
 {
-    if (event.view == self) {
+    if (event.sender == self) {
         return NO;
     }
     else {
@@ -255,14 +270,16 @@ static NSUInteger layoutViewIdx = 0;
 
 - (BOOL)onLayoutDragEndInside:(LayoutDragEvent *)event
 {
-    if (event.view == self) {
+    if (event.sender == self) {
         return YES;
     }
     else {
         LayoutRelativeDirection direction = [self checkLayoutPlacedDirection:event.location];
         if (direction != LayoutRelativeDirectionNone) {
-            [_handler removeLayoutView:event.view];
-            [_handler addLayoutView:event.view to:self direction:direction size:[self getPlacedFrame:direction].size];
+            LayoutView* view = [event.sender layoutWillMove];
+            if (view != nil) {
+                [_handler addLayoutView:view to:self direction:direction size:[self getPlacedFrame:direction].size];
+            }
             return YES;
         }
         else {

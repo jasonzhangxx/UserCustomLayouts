@@ -225,9 +225,9 @@ static NSUInteger layoutIdx = 0;
 
 - (void)removeSubNode:(LayoutNode *)node
 {
-    [_subNodes removeObject:node];
     node.parentNode = nil;
     node.root = nil;
+    [_subNodes removeObject:node];
     if (_align != LayoutAlignmentUnknow && _subNodes.count <= 1) {
         _align = LayoutAlignmentUnknow;
     }
@@ -261,7 +261,6 @@ static NSUInteger layoutIdx = 0;
             if (n.frame.size.width-mSize.width>=remind) {
                 [n setFrame:NSMakeRect(0, 0, n.frame.size.width-remind, n.frame.size.height)];
                 realChanged += remind;
-                remind = 0;
                 break;
             }
             else {
@@ -280,7 +279,6 @@ static NSUInteger layoutIdx = 0;
             if (n.frame.size.height-mSize.height>=remind) {
                 [n setFrame:NSMakeRect(0, 0, n.frame.size.width, n.frame.size.height-remind)];
                 realChanged += remind;
-                remind = 0;
                 break;
             }
             else {

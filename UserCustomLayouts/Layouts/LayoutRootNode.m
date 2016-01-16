@@ -7,6 +7,7 @@
 //
 
 #import "LayoutRootNode.h"
+#import "LayoutView.h"
 
 @implementation LayoutRootNode
 
@@ -29,6 +30,10 @@
 
 - (void)dealloc
 {
+    [[NSArray arrayWithArray:_view.subviews] enumerateObjectsUsingBlock:^(__kindof NSView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [obj removeFromSuperview];
+    }];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super dealloc];
 }
 
@@ -87,7 +92,10 @@
 
 - (BOOL)onLayoutDragEndInside:(LayoutDragEvent *)event
 {
-    [_handler addLayoutView:event.view toNode:_virtualNode direction:LayoutRelativeDirectionBottom size:NSZeroSize relativeNode:nil];
+    LayoutView* view = [event.sender layoutWillMove];
+    if (view != nil) {
+        [_handler addLayoutView:view toNode:_virtualNode direction:LayoutRelativeDirectionBottom size:NSZeroSize relativeNode:nil];
+    }
     return YES;
 }
 
