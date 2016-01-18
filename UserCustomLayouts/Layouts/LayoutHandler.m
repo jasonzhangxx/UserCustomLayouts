@@ -281,9 +281,9 @@
     [self changeFirstResponsedRootIfNeeded:locationInScreen];
     NSPoint locationInResponsedRootWindow = NSPointFromScreenToWindow(self.firstResponsedRoot.view.window, locationInScreen);
     
-    LayoutNode* targetNode = [self findeFirstResponsedNode:locationInResponsedRootWindow];
+    LayoutNode* targetNode = [self findeFirstResponsedNode:locationInResponsedRootWindow];//return targetNode or rootNode
     if (_focusedNode != targetNode) {
-        [_focusedNode.responser onLayoutDragOut];//_focusedNode maybe nil
+        [_focusedNode.responser onLayoutDragOut];
         _focusedNode = targetNode;
         if (_focusedNode != nil) {
             [_focusedNode.responser onLayoutDragIn];
@@ -295,9 +295,6 @@
         NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:locationInResponsedRootWindow fromView:nil];
         LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation panel:_draggingPanel];
         processed = [_focusedNode.responser onLayoutDragMove:event];
-    }
-    else {
-        //default hanle: check root layout border
     }
     
     if (_draggingPanel.isVisible == NO) {
@@ -336,9 +333,6 @@
         NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:locationInResponsedRootWindow fromView:nil];
         LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation panel:_draggingPanel];
         processed = [_focusedNode.responser onLayoutDragEndInside:event];
-    }
-    else {
-        //default hanle: check root layout border
     }
     
     if (processed == NO) {
@@ -414,7 +408,8 @@
 - (LayoutNode*)findeFirstResponsedNode:(NSPoint)location
 {
     NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:location fromView:nil];
-    return [self findResponsedNode:convertedLocation node:self.firstResponsedRoot];
+    LayoutNode* node = [self findResponsedNode:convertedLocation node:self.firstResponsedRoot];
+    return node!=nil?node:self.firstResponsedRoot;
 }
 
 - (LayoutNode*)findResponsedNode:(NSPoint)location node:(LayoutNode *)node

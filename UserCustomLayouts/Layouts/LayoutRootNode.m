@@ -74,7 +74,60 @@
     }
 }
 
-#pragma mark - Layout Responser
+#pragma mark - Layout Responser, default handler
+static CGFloat outspreadWidth = 24;
+- (LayoutRelativeDirection)checkLayoutPlacedDirection:(NSPoint)location
+{
+    if (!NSPointInRect(location, NSMakeRect(-outspreadWidth, -outspreadWidth, _view.bounds.size.width+outspreadWidth*2, _view.bounds.size.height+outspreadWidth*2))) {
+        return LayoutRelativeDirectionNone;
+    }
+    
+    float slope = _view.bounds.size.height/_view.bounds.size.width;
+    if (location.x < LayoutPlacedInitializeProportion*_view.bounds.size.width && location.y > location.x * slope) {
+        return LayoutRelativeDirectionLeft;
+    }
+    else if(location.x > (1.0-LayoutPlacedInitializeProportion)*_view.bounds.size.width && location.y > _view.bounds.size.height-location.x * slope) {
+        return LayoutRelativeDirectionRight;
+    }
+    else if (location.y < LayoutPlacedInitializeProportion*_view.bounds.size.height) {
+        return LayoutRelativeDirectionBottom;
+    }
+    else {
+        return LayoutRelativeDirectionNone;
+    }
+}
+
+- (NSRect)getPlacedFrame:(LayoutRelativeDirection)direction
+{
+    switch (direction) {
+        case LayoutRelativeDirectionLeft:
+        {
+            float width = _view.bounds.size.width*LayoutPlacedInitializeProportion;
+            return NSMakeRect(0, 0, width, _view.bounds.size.height);
+        }
+        case LayoutRelativeDirectionRight:
+        {
+            float width = _view.bounds.size.width*LayoutPlacedInitializeProportion;
+            return NSMakeRect(_view.bounds.size.width-width, 0, width, _view.bounds.size.height);
+        }
+        case LayoutRelativeDirectionBottom:
+        {
+            float height = _view.bounds.size.height*LayoutPlacedInitializeProportion;
+            return NSMakeRect(0, 0, _view.bounds.size.width, height);
+        }
+        case LayoutRelativeDirectionTop:
+        {
+            float height = _view.bounds.size.height*LayoutPlacedInitializeProportion;
+            return NSMakeRect(0, _view.bounds.size.height-height, _view.bounds.size.width, height);
+        }
+        default:
+        {
+            break;
+        }
+    }
+    return NSZeroRect;
+}
+
 - (void)onLayoutDragIn
 {
     
@@ -87,16 +140,44 @@
 
 - (BOOL)onLayoutDragMove:(LayoutDragEvent *)event
 {
-    return YES;
+    if (_virtualNode.subNodes.count == 0) {
+        [event.panel placeToView:_view frame:_view.bounds animated:YES];
+        return YES;
+    }
+    else {
+        LayoutRelativeDirection direction = [self checkLayoutPlacedDirection:event.location];
+        if (direction != LayoutRelativeDirectionNone) {
+            [event.panel placeToView:_view frame:[self getPlacedFrame:direction] animated:YES];
+            return YES;
+        }
+        else {
+            return NO;
+        }
+    }
 }
 
 - (BOOL)onLayoutDragEndInside:(LayoutDragEvent *)event
 {
-    LayoutView* view = [event.sender layoutWillMove];
-    if (view != nil) {
-        [_handler addLayoutView:view toNode:_virtualNode direction:LayoutRelativeDirectionBottom size:NSZeroSize relativeNode:nil];
+    if (_virtualNode.subNodes.count == 0) {
+        LayoutView* view = [event.sender layoutWillMove];
+        if (view != nil) {
+            [_handler addLayoutView:view toNode:_virtualNode direction:LayoutRelativeDirectionBottom size:NSZeroSize relativeNode:nil];
+        }
+        return YES;
     }
-    return YES;
+    else {
+        LayoutRelativeDirection direction = [self checkLayoutPlacedDirection:event.location];
+        if (direction != LayoutRelativeDirectionNone) {
+            LayoutView* view = [event.sender layoutWillMove];
+            if (view != nil) {
+                [_handler addLayoutView:view toNode:_virtualNode direction:direction size:[self getPlacedFrame:direction].size  relativeNode:nil];
+            }
+            return YES;
+        }
+        else {
+            return NO;
+        }
+    }
 }
 
 @end
