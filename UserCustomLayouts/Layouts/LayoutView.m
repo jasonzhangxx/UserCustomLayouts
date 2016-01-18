@@ -162,7 +162,6 @@ static NSUInteger layoutViewIdx = 0;
 
 - (void)resetCursorRects
 {
-    NSLog(@"11");
     //filter parentView's edge
     if ([self isResizeAvailable:LayoutRelativeDirectionLeft] == YES) {
         [self addCursorRect:NSMakeRect(0, 0, LayoutBorderWidth, self.frame.size.height) cursor:[NSCursor resizeLeftRightCursor]];
