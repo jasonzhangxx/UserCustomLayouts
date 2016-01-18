@@ -34,6 +34,16 @@
     return _title;
 }
 
+//debug
+- (void)drawRect:(NSRect)aRect
+{
+    [[NSColor greenColor] set];
+    NSRectFill(self.bounds);
+    
+    NSString* str = [NSString stringWithFormat:@"It's %@.", _title];
+    [str drawAtPoint:NSMakePoint(self.bounds.size.width/2.0, self.bounds.size.height/2.0) withAttributes:nil];
+}
+
 @end
 
 @implementation AppDelegate

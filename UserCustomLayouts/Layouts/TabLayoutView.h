@@ -47,4 +47,6 @@
 - (void)insertContentView:(NSView<TabLayoutContentInterface>*)view index:(int)index highlighted:(BOOL)highlighted;
 - (void)removeTab:(TabLayoutViewTab*)tab;
 
+- (NSView<TabLayoutContentInterface>*)tabLayoutWillMove;
+
 @end

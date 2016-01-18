@@ -161,11 +161,15 @@ const float TabbarHeight = 18;
     tab.delegate = self;
     [_tabs insertObject:tab atIndex:index];
     [_tabView addSubview:tab];
+    view.hidden = YES;
+    [self addSubview:view];
     [self formatTabs];
     
     if (highlighted == YES) {
         [self setSelectedTab:tab];
     }
+    
+    [self.window resetCursorRects];//protect cursor rects error
 }
 
 - (void)removeTab:(TabLayoutViewTab *)tab
@@ -218,6 +222,13 @@ const float TabbarHeight = 18;
 }
 
 #pragma mark - layout sender delegate
+- (void)checkRemoveIfNoChild
+{
+    if(_tabs.count == 0) {
+        [_handler removeLayoutView:self];
+    }
+}
+
 - (LayoutView*)layoutWillMove
 {
     NSView<TabLayoutContentInterface>* contentView = [[_draggingTab.contentView retain] autorelease];
@@ -227,55 +238,63 @@ const float TabbarHeight = 18;
     
     TabLayoutView* view = [[[TabLayoutView alloc] initWithHandler:_handler view:contentView] autorelease];
     view.frame = self.bounds;
-    if(_tabs.count == 0) {
-        [_handler removeLayoutView:self];
-    }
+    
+    [self checkRemoveIfNoChild];
     return view;
+}
+
+- (NSView<TabLayoutContentInterface>*)tabLayoutWillMove
+{
+    NSView<TabLayoutContentInterface>* contentView = [[_draggingTab.contentView retain] autorelease];
+    
+    [self removeTab:_draggingTab];
+    _draggingTab = nil;
+    
+    [self checkRemoveIfNoChild];
+    return contentView;
 }
 
 #pragma mark - layout drag responser
 - (BOOL)checkTabbarAdded:(LayoutView*)target location:(NSPoint)location
 {
-    if ([target isKindOfClass:[self class]]) {
-        NSPoint locationInView = [self convertPoint:location fromView:self.superview];
-        if (NSPointInRect(locationInView, _tabView.frame)) {
-            return YES;
-        }
+    NSPoint locationInView = [self convertPoint:location fromView:self.superview];
+    if (NSPointInRect(locationInView, _tabView.frame)) {
+        return YES;
     }
-    return NO;
+    else {
+       return NO;
+    }
 }
 
 - (BOOL)onLayoutDragMove:(LayoutDragEvent *)event
 {
-    if ([self checkTabbarAdded:event.sender location:event.location]) {
-        [event.panel placeToView:self frame:self.bounds animated:YES];
-        return YES;
+    if([event.sender isKindOfClass:[self class]] == YES) {
+        if ([self checkTabbarAdded:event.sender location:event.location]) {
+            [event.panel placeToView:self frame:self.bounds animated:YES];
+            return YES;
+        }
     }
-    else {
-        return [super onLayoutDragMove:event];
-    }
+    return [super onLayoutDragMove:event];
 }
 
 - (BOOL)onLayoutDragEndInside:(LayoutDragEvent *)event
 {
-    if ([self checkTabbarAdded:event.sender location:event.location]) {
-        if (event.sender == self) {
-            //reorder
-            
-        }
-        else {
-            TabLayoutView* view = (TabLayoutView*)[event.sender layoutWillMove];
-            if (view != nil) {
-                NSView<TabLayoutContentInterface>* contentView = [[view.tabs[0].contentView retain] autorelease];
-                [view removeTab:view.tabs[0]];
-                [self insertContentView:contentView index:(int)_tabs.count highlighted:YES];
+    if([event.sender isKindOfClass:[self class]] == YES) {
+        if ([self checkTabbarAdded:event.sender location:event.location]) {
+            if (event.sender == self) {
+                //reorder
+                
             }
+            else {
+                NSView<TabLayoutContentInterface>* view = [(TabLayoutView*)event.sender tabLayoutWillMove];
+                if (view != nil) {
+                    [self insertContentView:view index:(int)_tabs.count highlighted:YES];
+                }
+            }
+            return YES;
         }
-        return YES;
     }
-    else {
-        return [super onLayoutDragEndInside:event];
-    }
+    return [super onLayoutDragEndInside:event];
 }
 
 @end
