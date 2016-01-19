@@ -287,18 +287,14 @@ const float TabbarHeight = 18;
 {
     NSPoint locationInView = [self convertPoint:location fromView:self.superview];
     if (NSPointInRect(locationInView, _tabView.frame)) {
-        NSUInteger idx = _tabs.count;
-        for (NSInteger i=_tabs.count-1; i>=0; idx--) {
+        for (NSInteger i=0; i<_tabs.count; i++) {
             if (NSEqualRects(_tabs[i].frame, NSZeroRect) == NO) {
                 if (locationInView.x < _tabs[i].frame.origin.x+_tabs[i].frame.size.width) {
-                    idx = i;
-                }
-                else {
-                    break;
+                    return i;
                 }
             }
         }
-        return idx;
+        return _tabs.count;
     }
     else {
        return NSNotFound;
