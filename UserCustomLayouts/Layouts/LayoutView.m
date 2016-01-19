@@ -23,7 +23,7 @@
 //}
 
 const float LayoutPlacedInitializeProportion = .3;
-const float LayoutBorderWidth = 4;
+const float LayoutBorderWidth = 4.5;
 
 static NSUInteger layoutViewIdx = 0;
 
@@ -57,6 +57,11 @@ static NSUInteger layoutViewIdx = 0;
 - (NSSize)layoutMinSize
 {
     return NSZeroSize;
+}
+
+- (BOOL)checkDragSenderIsSelf:(LayoutDragEvent *)event
+{
+    return event.sender == self;
 }
 
 #pragma mark - mouse handle
@@ -254,7 +259,7 @@ static NSUInteger layoutViewIdx = 0;
 
 - (BOOL)onLayoutDragMove:(LayoutDragEvent *)event
 {
-    if (event.sender == self) {
+    if ([self checkDragSenderIsSelf:event] == YES) {
         return NO;
     }
     else {
@@ -271,7 +276,7 @@ static NSUInteger layoutViewIdx = 0;
 
 - (BOOL)onLayoutDragEndInside:(LayoutDragEvent *)event
 {
-    if (event.sender == self) {
+    if ([self checkDragSenderIsSelf:event] == YES) {
         return YES;
     }
     else {

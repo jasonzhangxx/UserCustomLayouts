@@ -53,20 +53,20 @@
     _hanlder = [[LayoutHandler alloc] initWithView:_window.contentView];
     
     //test
-    LayoutView* view1 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
-    [_hanlder addLayoutView:view1 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionLeft size:NSZeroSize relativeNode:nil];
-    
-    LayoutView* view2 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
-    [_hanlder addLayoutView:view2 to:view1 direction:LayoutRelativeDirectionLeft size:NSMakeSize(200, 100)];
-    
-    LayoutView* view3 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
-    [_hanlder addLayoutView:view3 to:view1 direction:LayoutRelativeDirectionLeft size:NSMakeSize(200, 100)];
-    
-    LayoutView* view4 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
-    [_hanlder addLayoutView:view4 to:view1 direction:LayoutRelativeDirectionBottom size:NSMakeSize(200, 200)];
-    
-    LayoutView* view5 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
-    [_hanlder addLayoutView:view5 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionBottom size:NSMakeSize(200, 200) relativeNode:nil];
+//    LayoutView* view1 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
+//    [_hanlder addLayoutView:view1 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionLeft size:NSZeroSize relativeNode:nil];
+//    
+//    LayoutView* view2 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
+//    [_hanlder addLayoutView:view2 to:view1 direction:LayoutRelativeDirectionLeft size:NSMakeSize(200, 100)];
+//    
+//    LayoutView* view3 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
+//    [_hanlder addLayoutView:view3 to:view1 direction:LayoutRelativeDirectionLeft size:NSMakeSize(200, 100)];
+//    
+//    LayoutView* view4 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
+//    [_hanlder addLayoutView:view4 to:view1 direction:LayoutRelativeDirectionBottom size:NSMakeSize(200, 200)];
+//    
+//    LayoutView* view5 = [[[LayoutView alloc] initWithHandler:_hanlder] autorelease];
+//    [_hanlder addLayoutView:view5 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionBottom size:NSMakeSize(200, 200) relativeNode:nil];
     
     
     TestView* content1 = [[[TestView alloc] init] autorelease];
@@ -78,7 +78,7 @@
     TabLayoutView *tabView1 = [[[TabLayoutView alloc] initWithHandler:_hanlder view:content1] autorelease];
     [tabView1 insertContentView:content2 index:0 highlighted:YES];
     [tabView1 insertContentView:content3 index:0 highlighted:YES];
-    [_hanlder addLayoutView:tabView1 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionBottom size:NSMakeSize(200, 200) relativeNode:nil];
+    [_hanlder addLayoutView:tabView1 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionLeft size:NSZeroSize relativeNode:nil];
     
 
 }

@@ -45,8 +45,9 @@
 -(instancetype)initWithHandler:(LayoutHandler*)handler view:(NSView<TabLayoutContentInterface>*)view;
 
 - (void)setSelectedTab:(TabLayoutViewTab*)tab;
-- (void)insertContentView:(NSView<TabLayoutContentInterface>*)view index:(int)index highlighted:(BOOL)highlighted;
+- (void)insertContentView:(NSView<TabLayoutContentInterface>*)view index:(NSInteger)index highlighted:(BOOL)highlighted;
 - (void)removeTab:(TabLayoutViewTab*)tab;
+- (void)reorderTab:(TabLayoutViewTab*)tab index:(NSInteger)index highlighted:(BOOL)highlighted;
 
 - (NSView<TabLayoutContentInterface>*)tabLayoutWillMove;
 

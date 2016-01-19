@@ -113,6 +113,11 @@ const float TabbarHeight = 18;
     [super dealloc];
 }
 
+- (BOOL)checkDragSenderIsSelf:(LayoutDragEvent *)event
+{
+    return event.sender == self && _tabs.count <= 1;
+}
+
 - (void)onViewDidResize:(NSNotification*)noti
 {
     if(noti.object == self) {
@@ -156,7 +161,7 @@ const float TabbarHeight = 18;
     }
 }
 
-- (void)insertContentView:(NSView<TabLayoutContentInterface> *)view index:(int)index highlighted:(BOOL)highlighted
+- (void)insertContentView:(NSView<TabLayoutContentInterface> *)view index:(NSInteger)index highlighted:(BOOL)highlighted
 {
     if (view == nil || index<0 || index>_tabs.count) {
         //TODO  error
@@ -173,7 +178,6 @@ const float TabbarHeight = 18;
     if (highlighted == YES) {
         [self setSelectedTab:tab];
     }
-    
     [self.window resetCursorRects];//protect cursor rects error
 }
 
@@ -193,11 +197,30 @@ const float TabbarHeight = 18;
     }
 }
 
+- (void)reorderTab:(TabLayoutViewTab *)tab index:(NSInteger)index highlighted:(BOOL)highlighted
+{
+    NSInteger oldIdx = [_tabs indexOfObject:tab];
+    [_tabs insertObject:tab atIndex:index];
+    if (oldIdx < index) {
+        [_tabs removeObjectAtIndex:oldIdx];
+    }
+    else {
+        [_tabs removeObjectAtIndex:oldIdx+1];
+    }
+    
+    if (highlighted == YES) {
+        [self setSelectedTab:tab];
+    }
+}
+
 - (void)formatTabs
 {
     for (int i=0,index=0,max=(int)_tabs.count; i<max; i++) {
         if (_tabs[i] != _draggingTab) {
             [_tabs[i] setFrame:NSMakeRect(100*index++, 0, 100, TabbarHeight)];
+        }
+        else {
+            [_tabs[i] setFrame:NSZeroRect];
         }
     }
 }
@@ -260,45 +283,59 @@ const float TabbarHeight = 18;
 }
 
 #pragma mark - layout drag responser
-- (BOOL)checkTabbarAdded:(LayoutView*)target location:(NSPoint)location
+- (NSInteger)checkTabbarAdded:(LayoutView*)target location:(NSPoint)location
 {
     NSPoint locationInView = [self convertPoint:location fromView:self.superview];
     if (NSPointInRect(locationInView, _tabView.frame)) {
-        return YES;
+        NSUInteger idx = _tabs.count;
+        for (NSInteger i=_tabs.count-1; i>=0; idx--) {
+            if (NSEqualRects(_tabs[i].frame, NSZeroRect) == NO) {
+                if (locationInView.x < _tabs[i].frame.origin.x+_tabs[i].frame.size.width) {
+                    idx = i;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        return idx;
     }
     else {
-       return NO;
+       return NSNotFound;
     }
 }
 
 - (BOOL)onLayoutDragMove:(LayoutDragEvent *)event
 {
     if([event.sender isKindOfClass:[self class]] == YES) {
-        if ([self checkTabbarAdded:event.sender location:event.location]) {
-            
+        NSInteger idx = [self checkTabbarAdded:event.sender location:event.location];
+        if (idx != NSNotFound) {
+            [event.panel placeToView:self frame:NSMakeRect(idx*100, self.frame.size.height-20, 100, 20) contentView:nil];
             return YES;
         }
     }
+    
     return [super onLayoutDragMove:event];
 }
 
 - (BOOL)onLayoutDragEndInside:(LayoutDragEvent *)event
 {
     if([event.sender isKindOfClass:[self class]] == YES) {
-        if ([self checkTabbarAdded:event.sender location:event.location]) {
+        NSInteger idx = [self checkTabbarAdded:event.sender location:event.location];
+        if (idx != NSNotFound) {
             if (event.sender == self) {
-                //reorder
-                
+                [self reorderTab:_draggingTab index:idx highlighted:YES];
             }
             else {
                 NSView<TabLayoutContentInterface>* view = [(TabLayoutView*)event.sender tabLayoutWillMove];
                 if (view != nil) {
-                    [self insertContentView:view index:(int)_tabs.count highlighted:YES];
+                    [self insertContentView:view index:idx highlighted:YES];
                 }
             }
             return YES;
         }
     }
+    
     return [super onLayoutDragEndInside:event];
 }
 

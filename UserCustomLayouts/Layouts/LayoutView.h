@@ -29,5 +29,6 @@ extern const float LayoutPlacedInitializeProportion;
 -(instancetype)initWithHandler:(LayoutHandler*)handler;
 
 -(NSSize)layoutMinSize;
+-(BOOL)checkDragSenderIsSelf:(LayoutDragEvent*)event;
 
 @end
