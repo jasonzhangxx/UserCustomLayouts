@@ -34,9 +34,10 @@ typedef enum : NSUInteger {
 
 @property(nonatomic, assign) LayoutView* sender;
 @property(nonatomic, assign) NSPoint location;//location in rootView
+@property(nonatomic, assign) NSPoint locationInScreen;//location in screen
 @property(nonatomic, assign) LayoutDraggingPanel* panel;
 
-+(LayoutDragEvent*)eventWithSender:(LayoutView*)sender location:(NSPoint)location panel:(LayoutDraggingPanel*)panel;
++(LayoutDragEvent*)eventWithSender:(LayoutView*)sender location:(NSPoint)location locInScreen:(NSPoint)locInScreen panel:(LayoutDraggingPanel*)panel;
 
 @end
 

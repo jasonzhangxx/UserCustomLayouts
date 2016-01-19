@@ -14,11 +14,12 @@
 
 @implementation LayoutDragEvent
 
-+ (LayoutDragEvent*)eventWithSender:(LayoutView*)sender location:(NSPoint)location panel:(LayoutDraggingPanel *)panel
++ (LayoutDragEvent*)eventWithSender:(LayoutView*)sender location:(NSPoint)location locInScreen:(NSPoint)locInScreen panel:(LayoutDraggingPanel *)panel
 {
     LayoutDragEvent* event = [[[LayoutDragEvent alloc] init] autorelease];
     event.sender = sender;
     event.location = location;
+    event.locationInScreen = locInScreen;
     event.panel = panel;
     return event;
 }
@@ -106,7 +107,7 @@
             if (_dragState != LayoutDragStateUnkown) {
                 [self cancelDragging];
             }
-            [self startDragging:sender];
+            [self startDragging:sender locaion:locationInWindow];
             break;
         }
         case LayoutDragStateDraging:
@@ -198,7 +199,7 @@
     }
     
     LayoutContentNode* subNode = [[[LayoutContentNode alloc] initWithHandler:self view:layoutView] autorelease];
-    [_viewMap setObject:subNode forKey:[NSNumber numberWithUnsignedLong:layoutView.identifier]];//add relationship to viewmap
+    [_viewMap setObject:subNode forKey:[NSNumber numberWithUnsignedLong:layoutView.layoutIdentifier]];//add relationship to viewmap
     
     if ((targetNode.align & dir) > 0) {
         [targetNode addSubNode:subNode direction:dir size:size relativeNode:relativeNode];
@@ -225,7 +226,7 @@
     [layoutView removeFromSuperview];
     
     LayoutNode* parentNode = node.parentNode;
-    [_viewMap removeObjectForKey:[NSNumber numberWithUnsignedLong:layoutView.identifier]];//remove relationship from viewmap
+    [_viewMap removeObjectForKey:[NSNumber numberWithUnsignedLong:layoutView.layoutIdentifier]];//remove relationship from viewmap
     [node removeFromParent];//rootNode's virtualNode do nothing
     
     if (parentNode.parentNode == parentNode.root) {//root's virtualNode
@@ -260,11 +261,14 @@
 }
 
 #pragma mark - dragging handle
-- (void)startDragging:(LayoutView*)sender
+- (void)startDragging:(LayoutView*)sender locaion:(NSPoint)locationInWindow
 {
     _dragSender = sender;
     _focusedNode = nil;
     _dragState = LayoutDragStateBegin;
+    [_draggingPanel snapshotView:_dragSender];
+    [_draggingPanel restoreToOrigin];
+    [_draggingPanel moveToLocation:NSPointFromWindowToScreen(_dragSender.window, locationInWindow)];
     
     if (_dragSender != nil) {
         if ([_dragSender respondsToSelector:@selector(layoutDragDidBegin)]) {
@@ -293,19 +297,13 @@
     BOOL processed = NO;
     if (_focusedNode != nil) {
         NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:locationInResponsedRootWindow fromView:nil];
-        LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation panel:_draggingPanel];
+        LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation locInScreen:locationInScreen panel:_draggingPanel];
         processed = [_focusedNode.responser onLayoutDragMove:event];
-    }
-    
-    if (_draggingPanel.isVisible == NO) {
-        [_draggingPanel snapshotView:_dragSender];
-        [_draggingPanel restoreToOrigin:NO];
     }
     
     if (processed == NO) {
         //move draggingPanel
-        [_draggingPanel restoreToOrigin:YES];
-        [_draggingPanel moveToLocation:locationInScreen animated:NO];
+        [_draggingPanel moveToLocation:locationInScreen];
     }
     
     // prevent flash from error position
@@ -331,7 +329,7 @@
     BOOL processed = NO;
     if (_focusedNode != nil) {
         NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:locationInResponsedRootWindow fromView:nil];
-        LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation panel:_draggingPanel];
+        LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation locInScreen:locationInScreen panel:_draggingPanel];
         processed = [_focusedNode.responser onLayoutDragEndInside:event];
     }
     
@@ -388,7 +386,7 @@
                         [nodes addObjectsFromArray:nodes[0].subNodes];
                     }
                     if ([nodes[0] isKindOfClass:[LayoutContentNode class]]) {
-                        [_viewMap removeObjectForKey:[NSNumber numberWithUnsignedLong:((LayoutContentNode*)nodes[0]).view.identifier]];//remove relationship from viewmap
+                        [_viewMap removeObjectForKey:[NSNumber numberWithUnsignedLong:((LayoutContentNode*)nodes[0]).view.layoutIdentifier]];//remove relationship from viewmap
                     }
                     [nodes removeObjectAtIndex:0];
                 }
@@ -402,7 +400,7 @@
 #pragma mark -
 - (LayoutContentNode*)findAssociatedNode:(LayoutView *)view
 {
-    return [_viewMap objectForKey:[NSNumber numberWithUnsignedLong:view.identifier]];
+    return [_viewMap objectForKey:[NSNumber numberWithUnsignedLong:view.layoutIdentifier]];
 }
 
 - (LayoutNode*)findeFirstResponsedNode:(NSPoint)location

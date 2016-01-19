@@ -141,13 +141,13 @@ static CGFloat outspreadWidth = 24;
 - (BOOL)onLayoutDragMove:(LayoutDragEvent *)event
 {
     if (_virtualNode.subNodes.count == 0) {
-        [event.panel placeToView:_view frame:_view.bounds animated:YES];
+        [event.panel placeToView:_view frame:_view.bounds contentView:nil];
         return YES;
     }
     else {
         LayoutRelativeDirection direction = [self checkLayoutPlacedDirection:event.location];
         if (direction != LayoutRelativeDirectionNone) {
-            [event.panel placeToView:_view frame:[self getPlacedFrame:direction] animated:YES];
+            [event.panel placeToView:_view frame:[self getPlacedFrame:direction] contentView:nil];
             return YES;
         }
         else {

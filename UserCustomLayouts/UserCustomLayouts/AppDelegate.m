@@ -40,7 +40,7 @@
     [[NSColor greenColor] set];
     NSRectFill(self.bounds);
     
-    NSString* str = [NSString stringWithFormat:@"It's %@.", _title];
+    NSString* str = [NSString stringWithFormat:@"It's %@", _title];
     [str drawAtPoint:NSMakePoint(self.bounds.size.width/2.0, self.bounds.size.height/2.0) withAttributes:nil];
 }
 
@@ -70,11 +70,11 @@
     
     
     TestView* content1 = [[[TestView alloc] init] autorelease];
-    content1.title = @"Tab1";
+    content1.title = @"Content 1";
     TestView* content2 = [[[TestView alloc] init] autorelease];
-    content2.title = @"Tab2";
+    content2.title = @"Content 2";
     TestView* content3 = [[[TestView alloc] init] autorelease];
-    content3.title = @"Tab3";
+    content3.title = @"Content 3";
     TabLayoutView *tabView1 = [[[TabLayoutView alloc] initWithHandler:_hanlder view:content1] autorelease];
     [tabView1 insertContentView:content2 index:0 highlighted:YES];
     [tabView1 insertContentView:content3 index:0 highlighted:YES];

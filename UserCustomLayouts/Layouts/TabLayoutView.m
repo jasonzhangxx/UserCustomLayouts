@@ -40,7 +40,12 @@ const float TabbarHeight = 18;
 
 - (NSString*)tabTitle
 {
-    return [_contentView layoutTitle];
+    if(_contentView == nil) {
+        return _title;
+    }
+    else {
+        return [_contentView layoutTitle];
+    }
 }
 
 - (void)setHighlighted:(BOOL)highlighted
@@ -270,7 +275,7 @@ const float TabbarHeight = 18;
 {
     if([event.sender isKindOfClass:[self class]] == YES) {
         if ([self checkTabbarAdded:event.sender location:event.location]) {
-            [event.panel placeToView:self frame:self.bounds animated:YES];
+            
             return YES;
         }
     }

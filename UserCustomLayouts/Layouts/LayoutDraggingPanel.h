@@ -8,15 +8,24 @@
 
 #import <Cocoa/Cocoa.h>
 
+typedef enum : NSUInteger {
+    LayoutDraggingPanelStateOrigin,
+    LayoutDraggingPanelStatePlaced,
+    LayoutDraggingPanelStateAnimating,
+} LayoutDraggingPanelState;
+
 @interface LayoutDraggingPanel : NSPanel
+{
+    NSImageView* _imageView;
+    LayoutDraggingPanelState _state;
+}
 
 @property (nonatomic, readonly) NSSize originalSize;
 
 - (void)snapshotView:(NSView*)view;
 
-- (void)restoreToOrigin:(BOOL)animated;
-//TODO 优化停靠显示
-- (void)placeToView:(NSView*)view frame:(NSRect)frame animated:(BOOL)animated;
-- (void)moveToLocation:(NSPoint)locationInScreen animated:(BOOL)animated;
+- (void)restoreToOrigin;
+- (void)moveToLocation:(NSPoint)locationInScreen;
+- (void)placeToView:(NSView*)view frame:(NSRect)frame contentView:(NSView*)content;
 
 @end

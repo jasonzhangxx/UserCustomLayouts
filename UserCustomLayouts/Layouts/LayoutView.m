@@ -11,23 +11,23 @@
 
 @implementation LayoutView
 
-//debug
-- (void)drawRect:(NSRect)aRect
-{
-    [[NSColor greenColor] set];
-    NSBezierPath *bp = [NSBezierPath bezierPathWithRect:[self bounds]];
-    [bp stroke];
-    
-    NSString* str = [NSString stringWithFormat:@"View%lu",(unsigned long)_id];
-    [str drawAtPoint:NSZeroPoint withAttributes:nil];
-}
+////debug
+//- (void)drawRect:(NSRect)aRect
+//{
+//    [[NSColor greenColor] set];
+//    NSBezierPath *bp = [NSBezierPath bezierPathWithRect:[self bounds]];
+//    [bp stroke];
+//    
+//    NSString* str = [NSString stringWithFormat:@"View%lu",(unsigned long)_id];
+//    [str drawAtPoint:NSZeroPoint withAttributes:nil];
+//}
 
 const float LayoutPlacedInitializeProportion = .3;
 const float LayoutBorderWidth = 4;
 
 static NSUInteger layoutViewIdx = 0;
 
-@synthesize identifier = _id;
+@synthesize layoutIdentifier = _id;
 @synthesize handler = _handler;
 
 - (instancetype) init
@@ -85,10 +85,10 @@ static NSUInteger layoutViewIdx = 0;
         _resizeDirection = LayoutRelativeDirectionTop;
         _mouseDownRelativeLocation = NSMakePoint(location.x, _frame.size.height-location.y);
     }
-    
-    if (_resizing == NO) {
-        [_handler handleMouseEvent:self type:LayoutDragStateBegin location:theEvent.locationInWindow];
-    }
+//    //debug
+//    if (_resizing == NO) {
+//        [_handler handleMouseEvent:self type:LayoutDragStateBegin location:theEvent.locationInWindow];
+//    }
 }
 
 - (void)mouseDragged:(NSEvent *)theEvent
@@ -124,16 +124,18 @@ static NSUInteger layoutViewIdx = 0;
         }
     }
     
-    if (_resizing == NO) {
-        [_handler handleMouseEvent:self type:LayoutDragStateDraging location:theEvent.locationInWindow];
-    }
+//    //debug
+//    if (_resizing == NO) {
+//        [_handler handleMouseEvent:self type:LayoutDragStateDraging location:theEvent.locationInWindow];
+//    }
 }
 
 - (void)mouseUp:(NSEvent *)theEvent
 {
-    if (_resizing == NO) {
-        [_handler handleMouseEvent:self type:LayoutDragStateEnd location:theEvent.locationInWindow];
-    }
+//    //debug
+//    if (_resizing == NO) {
+//        [_handler handleMouseEvent:self type:LayoutDragStateEnd location:theEvent.locationInWindow];
+//    }
     
     _resizing = NO;
 }
@@ -258,7 +260,7 @@ static NSUInteger layoutViewIdx = 0;
     else {
         LayoutRelativeDirection direction = [self checkLayoutPlacedDirection:event.location];
         if (direction != LayoutRelativeDirectionNone) {
-            [event.panel placeToView:self frame:[self getPlacedFrame:direction] animated:YES];
+            [event.panel placeToView:self frame:[self getPlacedFrame:direction] contentView:nil];
             return YES;
         }
         else {

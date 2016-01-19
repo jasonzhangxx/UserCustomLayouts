@@ -8,6 +8,8 @@
 
 #import "LayoutDraggingPanel.h"
 
+const float DraggingPanelAlpha = .7;
+
 @implementation LayoutDraggingPanel
 
 - (BOOL)canBecomeKeyWindow
@@ -20,15 +22,24 @@
     [self close];
 }
 
-
 - (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag
 {
     self = [super initWithContentRect:contentRect styleMask:aStyle backing:bufferingType defer:flag];
     if (self) {
-        NSImageView* imageView = [[[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
-        self.contentView = imageView;
+        [self setOpaque:NO];
+        
+        _imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
+        _imageView.imageScaling = NSImageScaleAxesIndependently;
+        self.contentView = _imageView;
+        _state = LayoutDraggingPanelStateOrigin;
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [_imageView release];
+    [super dealloc];
 }
 
 - (void)snapshotView:(NSView *)view
@@ -43,31 +54,68 @@
     NSImage* image = [[[NSImage alloc] initWithSize:_originalSize] autorelease];
     [image addRepresentation:bitmapRep];
     
-    [(NSImageView*)self.contentView setImage:image];
+    [_imageView setImage:image];
 }
 
-- (void)restoreToOrigin:(BOOL)animated
+- (void)restoreToOrigin
 {
-    [self setFrame:NSMakeRect(_frame.origin.x, _frame.origin.y, _originalSize.width, _originalSize.height) display:YES animate:animated];
-    [self setOpaque:NO];
-    [self setAlphaValue:.8];
+    self.contentView = _imageView;
+    [self setFrame:NSMakeRect(_frame.origin.x, _frame.origin.y, _originalSize.width, _originalSize.height) display:YES animate:NO];
+    [self setAlphaValue:DraggingPanelAlpha];
+    _state = LayoutDraggingPanelStateOrigin;
 }
 
-- (void)placeToView:(NSView *)view frame:(NSRect)frame animated:(BOOL)animated
+- (void)moveToLocation:(NSPoint)locationInScreen
+{
+    NSRect rect = NSMakeRect(locationInScreen.x-_originalSize.width/2.0, locationInScreen.y-_originalSize.height/2.0, _originalSize.width, _originalSize.height);
+    if(_state == LayoutDraggingPanelStateAnimating) {//do nothing
+        return;
+    }
+    else if(_state == LayoutDraggingPanelStateOrigin) {//set frame directly
+        [self setFrame:rect display:YES animate:NO];
+    }
+    else {//state changed
+        self.contentView = _imageView;
+        [NSAnimationContext runAnimationGroup:^(NSAnimationContext * _Nonnull context) {
+            [[NSAnimationContext currentContext] setDuration:.3];
+            [[self animator] setFrame:rect display:YES];
+            [[self animator] setAlphaValue:DraggingPanelAlpha];
+        } completionHandler:^{
+            _state = LayoutDraggingPanelStateOrigin;
+        }];
+        _state = LayoutDraggingPanelStateAnimating;
+    }
+}
+
+- (void)placeToView:(NSView *)view frame:(NSRect)frame contentView:(NSView *)content
 {
     if (view.window == nil) {
         //TODO view must have window
         return;
     }
-    [self setOpaque:YES];
+    
     NSRect rect = [view convertRect:frame toView:nil];//view to window
     rect = [view.window convertRectToScreen:rect];//window to screen
-    [self setFrame:rect display:YES animate:animated];
-}
-
-- (void)moveToLocation:(NSPoint)locationInScreen animated:(BOOL)animated
-{
-    [self setFrame:NSMakeRect(locationInScreen.x-_originalSize.width/2.0, locationInScreen.y-_originalSize.height/2.0, _originalSize.width, _originalSize.height) display:YES animate:animated];
+    if(_state == LayoutDraggingPanelStateAnimating) {//do nothing
+        return;
+    }
+    else if(_state == LayoutDraggingPanelStatePlaced && content == self.contentView) {//set frame directly
+        [self setFrame:rect display:YES animate:NO];
+    }
+    else {//state changed
+        [NSAnimationContext runAnimationGroup:^(NSAnimationContext * _Nonnull context) {
+            [[NSAnimationContext currentContext] setDuration:.3];
+            [[self animator] setFrame:rect display:YES];
+            [[self animator] setAlphaValue:1];
+        } completionHandler:^{
+            if(content != nil) {
+                content.frame = NSMakeRect(0, 0, self.contentView.frame.size.width, self.contentView.frame.size.height);
+                self.contentView = content;
+            }
+            _state = LayoutDraggingPanelStatePlaced;
+        }];
+        _state = LayoutDraggingPanelStateAnimating;
+    }
 }
 
 @end

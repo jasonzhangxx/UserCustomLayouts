@@ -22,6 +22,7 @@
 @interface TabLayoutViewTab : NSView
 
 @property(nonatomic, retain) NSView<TabLayoutContentInterface>* contentView;
+@property(nonatomic, retain) NSString* title;
 @property(nonatomic, assign) id<TabLayoutViewTabDelegate> delegate;
 @property(nonatomic, assign) BOOL highlighted;
 -(NSString*)tabTitle;
