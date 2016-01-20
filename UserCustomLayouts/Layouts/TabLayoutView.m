@@ -9,6 +9,7 @@
 #import "TabLayoutView.h"
 #import "LayoutHandler.h"
 
+const float TabbarNormalWidth = 100;
 const float TabbarHeight = 18;
 
 @implementation TabLayoutViewTab
@@ -21,6 +22,19 @@ const float TabbarHeight = 18;
     [bp stroke];
     
     [[self tabTitle] drawAtPoint:NSZeroPoint withAttributes:nil];
+}
+
+static TabLayoutViewTab* s_tempDraggingTab = nil;
++ (void)initialize
+{
+    if (self == [TabLayoutViewTab class]) {
+        s_tempDraggingTab = [[TabLayoutViewTab alloc] init];
+    }
+}
+
++ (instancetype)sharedTempTab
+{
+    return s_tempDraggingTab;
 }
 
 - (instancetype)initWithContentView:(NSView<TabLayoutContentInterface> *)view
@@ -95,6 +109,7 @@ const float TabbarHeight = 18;
 {
     self = [super initWithHandler:handler];
     if(self) {
+        _insertedTabIndex = -1;
         _tabs = [[NSMutableArray alloc] init];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onViewDidResize:) name:NSViewFrameDidChangeNotification object:nil];
         
@@ -161,6 +176,22 @@ const float TabbarHeight = 18;
     }
 }
 
+- (void)setDraggingTab:(TabLayoutViewTab *)draggingTab
+{
+    if (draggingTab != _draggingTab) {
+        _draggingTab = draggingTab;
+        [self formatTabs];
+    }
+}
+
+- (void)setTempInsertedTabIndex:(NSInteger)index
+{
+    if (index != _insertedTabIndex) {
+        _insertedTabIndex = index;
+        [self formatTabs];
+    }
+}
+
 - (void)insertContentView:(NSView<TabLayoutContentInterface> *)view index:(NSInteger)index highlighted:(BOOL)highlighted
 {
     if (view == nil || index<0 || index>_tabs.count) {
@@ -215,13 +246,50 @@ const float TabbarHeight = 18;
 
 - (void)formatTabs
 {
-    for (int i=0,index=0,max=(int)_tabs.count; i<max; i++) {
-        if (_tabs[i] != _draggingTab) {
-            [_tabs[i] setFrame:NSMakeRect(100*index++, 0, 100, TabbarHeight)];
+    NSSize tabSize = [self getTabSize];
+    for (int i=0,max=(int)_tabs.count; i<max; i++) {
+        NSInteger displayIdx = [self getTabDisplayIndex:_tabs[i]];
+        if(displayIdx != NSNotFound) {
+            [_tabs[i] setFrame:NSMakeRect(tabSize.width*displayIdx, 0, tabSize.width, tabSize.height)];
         }
         else {
             [_tabs[i] setFrame:NSZeroRect];
         }
+    }
+}
+
+- (NSSize)getTabSize
+{
+    NSInteger count = _tabs.count;
+    if (_draggingTab != nil) {
+        count--;
+    }
+    return  NSMakeSize(MIN(TabbarNormalWidth, _frame.size.width/(float)count), TabbarHeight);
+}
+
+- (NSInteger)getTabDisplayIndex:(TabLayoutViewTab*)tab
+{
+    if (tab == _draggingTab) {
+        return NSNotFound;
+    }
+    NSInteger displayIndex = [_tabs indexOfObject:tab];
+    if (displayIndex == NSNotFound) {
+        return displayIndex;
+    }
+    else {
+        NSInteger correction = 0;
+        if(_draggingTab != nil) {//draggingTab correct
+            NSInteger draggingIdx = [_tabs indexOfObject:_draggingTab];
+            if (displayIndex > draggingIdx) {
+                correction += -1;
+            }
+        }
+        if (_insertedTabIndex != -1) {//insertedTab correct
+            if (displayIndex >= _insertedTabIndex) {
+                correction += 1;
+            }
+        }
+        return displayIndex+correction;
     }
 }
 
@@ -236,8 +304,7 @@ const float TabbarHeight = 18;
 - (void)tabMouseDragged:(TabLayoutViewTab*)sender event:(NSEvent *)theEvent
 {
     if (sender != _draggingTab) {
-        _draggingTab = sender;
-        [self formatTabs];
+        [self setDraggingTab:sender];
     }
     [_handler handleMouseEvent:self type:LayoutDragStateDraging location:theEvent.locationInWindow];
 }
@@ -245,8 +312,7 @@ const float TabbarHeight = 18;
 - (void)tabMouseUp:(TabLayoutViewTab*)sender event:(NSEvent *)theEvent
 {
     [_handler handleMouseEvent:self type:LayoutDragStateEnd location:theEvent.locationInWindow];
-    _draggingTab = nil;
-    [self formatTabs];
+    [self setDraggingTab:nil];
 }
 
 #pragma mark - layout sender delegate
@@ -262,7 +328,7 @@ const float TabbarHeight = 18;
     NSView<TabLayoutContentInterface>* contentView = [[_draggingTab.contentView retain] autorelease];
     
     [self removeTab:_draggingTab];
-    _draggingTab = nil;
+    [self setDraggingTab:nil];
     
     TabLayoutView* view = [[[TabLayoutView alloc] initWithHandler:_handler view:contentView] autorelease];
     view.frame = self.bounds;
@@ -276,10 +342,15 @@ const float TabbarHeight = 18;
     NSView<TabLayoutContentInterface>* contentView = [[_draggingTab.contentView retain] autorelease];
     
     [self removeTab:_draggingTab];
-    _draggingTab = nil;
+    [self setDraggingTab:nil];
     
     [self checkRemoveIfNoChild];
     return contentView;
+}
+
+- (void)layoutDragDidCancel
+{
+    [self setDraggingTab:nil];
 }
 
 #pragma mark - layout drag responser
@@ -287,18 +358,22 @@ const float TabbarHeight = 18;
 {
     NSPoint locationInView = [self convertPoint:location fromView:self.superview];
     if (NSPointInRect(locationInView, _tabView.frame)) {
-        for (NSInteger i=0; i<_tabs.count; i++) {
-            if (NSEqualRects(_tabs[i].frame, NSZeroRect) == NO) {
-                if (locationInView.x < _tabs[i].frame.origin.x+_tabs[i].frame.size.width) {
-                    return i;
-                }
-            }
-        }
-        return _tabs.count;
+        NSSize tabSize = [self getTabSize];
+        NSInteger insertedIndex = floor((locationInView.x/tabSize.width));
+        return MIN(_tabs.count, MAX(0, insertedIndex));
     }
     else {
        return NSNotFound;
     }
+}
+
+- (void)onLayoutDragIn
+{
+}
+
+- (void)onLayoutDragOut
+{
+    [self setTempInsertedTabIndex:-1];
 }
 
 - (BOOL)onLayoutDragMove:(LayoutDragEvent *)event
@@ -306,8 +381,15 @@ const float TabbarHeight = 18;
     if([event.sender isKindOfClass:[self class]] == YES) {
         NSInteger idx = [self checkTabbarAdded:event.sender location:event.location];
         if (idx != NSNotFound) {
-            [event.panel placeToView:self frame:NSMakeRect(idx*100, self.frame.size.height-20, 100, 20) contentView:nil];
+            [self setTempInsertedTabIndex:idx];
+            NSSize tabSize = [self getTabSize];
+            NSPoint tabLocation = [self convertPoint:event.location fromView:nil];
+            [TabLayoutViewTab sharedTempTab].title = ((TabLayoutView*)event.sender).draggingTab.tabTitle;
+            [event.panel placeToView:self frame:NSMakeRect(MIN(self.frame.size.width-tabSize.width,MAX(0,tabLocation.x-tabSize.width/2.0)), _tabView.frame.origin.y, tabSize.width, tabSize.height) contentView:[TabLayoutViewTab sharedTempTab]];
             return YES;
+        }
+        else {
+            [self setTempInsertedTabIndex:-1];
         }
     }
     
@@ -316,6 +398,7 @@ const float TabbarHeight = 18;
 
 - (BOOL)onLayoutDragEndInside:(LayoutDragEvent *)event
 {
+    [self setTempInsertedTabIndex:-1];
     if([event.sender isKindOfClass:[self class]] == YES) {
         NSInteger idx = [self checkTabbarAdded:event.sender location:event.location];
         if (idx != NSNotFound) {

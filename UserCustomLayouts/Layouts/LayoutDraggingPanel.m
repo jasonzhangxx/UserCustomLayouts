@@ -99,10 +99,11 @@ const float DraggingPanelAlpha = .7;
     if(_state == LayoutDraggingPanelStateAnimating) {//do nothing
         return;
     }
-    else if(_state == LayoutDraggingPanelStatePlaced && content == self.contentView) {//set frame directly
+    else if(_state == LayoutDraggingPanelStatePlaced && (content == self.contentView || (content==nil&&self.contentView==_imageView))) {//set frame directly
         [self setFrame:rect display:YES animate:NO];
     }
     else {//state changed
+        self.contentView = _imageView;
         [NSAnimationContext runAnimationGroup:^(NSAnimationContext * _Nonnull context) {
             [[NSAnimationContext currentContext] setDuration:.3];
             [[self animator] setFrame:rect display:YES];

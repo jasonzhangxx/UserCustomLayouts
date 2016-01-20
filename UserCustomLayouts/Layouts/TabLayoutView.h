@@ -21,6 +21,8 @@
 
 @interface TabLayoutViewTab : NSView
 
++ (instancetype)sharedTempTab;
+
 @property(nonatomic, retain) NSView<TabLayoutContentInterface>* contentView;
 @property(nonatomic, retain) NSString* title;
 @property(nonatomic, assign) id<TabLayoutViewTabDelegate> delegate;
@@ -37,6 +39,7 @@
     NSView* _tabView;
     TabLayoutViewTab* _selectedTab;
     TabLayoutViewTab* _draggingTab;
+    NSUInteger _insertedTabIndex;  //inserted index in _tabs, not display index
 }
 
 -(NSArray<TabLayoutViewTab*>*)tabs;
@@ -45,6 +48,8 @@
 -(instancetype)initWithHandler:(LayoutHandler*)handler view:(NSView<TabLayoutContentInterface>*)view;
 
 - (void)setSelectedTab:(TabLayoutViewTab*)tab;
+- (void)setTempInsertedTabIndex:(NSInteger)index;
+
 - (void)insertContentView:(NSView<TabLayoutContentInterface>*)view index:(NSInteger)index highlighted:(BOOL)highlighted;
 - (void)removeTab:(TabLayoutViewTab*)tab;
 - (void)reorderTab:(TabLayoutViewTab*)tab index:(NSInteger)index highlighted:(BOOL)highlighted;
