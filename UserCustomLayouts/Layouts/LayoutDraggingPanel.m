@@ -27,6 +27,7 @@ const float DraggingPanelAlpha = .7;
     self = [super initWithContentRect:contentRect styleMask:aStyle backing:bufferingType defer:flag];
     if (self) {
         [self setOpaque:NO];
+        [self setBackgroundColor:[NSColor clearColor]];
         
         _imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
         _imageView.imageScaling = NSImageScaleAxesIndependently;

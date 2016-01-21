@@ -42,7 +42,6 @@
 }
 
 #pragma mark - resize event
-const float LayoutBorderWidth = 4.5;
 - (void)resetResizeRects
 {
     [_resizeRects removeAllObjects];
@@ -97,7 +96,10 @@ const float LayoutBorderWidth = 4.5;
     _resizing = NO;
     NSPoint location = [self convertPoint:theEvent.locationInWindow fromView:nil];
     [_resizeRects enumerateObjectsUsingBlock:^(RootLayoutResizeRect * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        if (NSPointInRect(location, obj.rect)) {
+        if (location.x>=floor(obj.rect.origin.x) &&
+            location.y>=floor(obj.rect.origin.y) &&
+            location.x<=ceil(obj.rect.origin.x+obj.rect.size.width) &&
+            location.y<=ceil(obj.rect.origin.y+obj.rect.size.height)) {//NSPointInRect is not good here
             _resizing = YES;
             _mouseDownRect = [obj retain];
             _mouseDownRelativeLocation = NSMakePoint(location.x-(_mouseDownRect.prevNode.frame.origin.x+_mouseDownRect.prevNode.frame.size.width), location.y-(_mouseDownRect.prevNode.frame.origin.y+_mouseDownRect.prevNode.frame.size.height));

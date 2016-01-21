@@ -14,21 +14,12 @@ const float TabbarHeight = 18;
 
 @implementation TabLayoutViewTab
 
-//debug
-- (void)drawRect:(NSRect)aRect
-{
-    [[NSColor blackColor] set];
-    NSBezierPath *bp = [NSBezierPath bezierPathWithRect:[self bounds]];
-    [bp stroke];
-    
-    [[self tabTitle] drawAtPoint:NSZeroPoint withAttributes:nil];
-}
-
 static TabLayoutViewTab* s_tempDraggingTab = nil;
 + (void)initialize
 {
     if (self == [TabLayoutViewTab class]) {
         s_tempDraggingTab = [[TabLayoutViewTab alloc] init];
+        [s_tempDraggingTab setHighlighted:YES];
     }
 }
 
@@ -65,6 +56,25 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
 - (void)setHighlighted:(BOOL)highlighted
 {
     _highlighted = highlighted;
+    [self setNeedsDisplay:YES];
+}
+
+- (void)drawRect:(NSRect)dirtyRect
+{
+    if (_highlighted) {
+        NSBezierPath* path = [NSBezierPath bezierPathWithRect:self.bounds];
+        //border
+        [[NSColor colorWithRed:0 green:0 blue:0 alpha:.5] set];
+        [path stroke];
+        //fill
+        NSGradient *gradient = [[NSGradient alloc] initWithStartingColor:[NSColor colorWithCalibratedRed:.9 green:.9 blue:.9 alpha:1] endingColor:[NSColor colorWithCalibratedRed:.84 green:.84 blue:.84 alpha:1]];
+        [gradient drawInBezierPath:path angle:-90];
+    }
+    
+    NSMutableParagraphStyle *paragraphStyle = [[[NSParagraphStyle defaultParagraphStyle] mutableCopy] autorelease];
+    paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
+    paragraphStyle.alignment = NSTextAlignmentCenter;
+    [self.tabTitle drawInRect:NSMakeRect(4, 2, self.bounds.size.width-8, 14) withAttributes:@{NSParagraphStyleAttributeName:paragraphStyle}];
 }
 
 - (void)mouseDown:(NSEvent *)theEvent
@@ -94,17 +104,6 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
 
 @synthesize draggingTab = _draggingTab;
 
-//debug
-- (void)drawRect:(NSRect)aRect
-{
-    [[NSColor redColor] set];
-    NSBezierPath *bp = [NSBezierPath bezierPathWithRect:[self bounds]];
-    [bp stroke];
-    
-    NSString* str = [NSString stringWithFormat:@"TabView%lu",(unsigned long)_id];
-    [str drawAtPoint:NSZeroPoint withAttributes:nil];
-}
-
 - (instancetype)initWithHandler:(LayoutHandler *)handler
 {
     self = [super initWithHandler:handler];
@@ -133,6 +132,19 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [_tabs release];
     [super dealloc];
+}
+
+- (void)drawRect:(NSRect)aRect
+{
+    NSRect contentRect = NSMakeRect(1, 1, self.bounds.size.width-2, self.bounds.size.height-TabbarHeight-1);
+    NSBezierPath* path = [NSBezierPath bezierPathWithRect:contentRect];
+    path.lineWidth = .5;
+    //fill
+    [[NSColor colorWithRed:.76 green:.76 blue:.76 alpha:1] set];
+    [path fill];
+    //border
+    [[NSColor colorWithRed:0 green:0 blue:0 alpha:1] set];
+    [path stroke];
 }
 
 - (BOOL)checkDragSenderIsSelf:(LayoutDragEvent *)event

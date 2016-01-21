@@ -221,6 +221,7 @@
     [newWindow setFrame:NSMakeRect(locationInScreen.x-newWindow.frame.size.width/2.0, locationInScreen.y-newWindow.frame.size.height/2.0, newWindow.frame.size.width, newWindow.frame.size.height) display:YES];
     newWindow.delegate = self;
     newWindow.hasShadow = YES;
+    [newWindow setBackgroundColor:[NSColor colorWithRed:.6353 green:.6353 blue:.6353 alpha:1]];
     
     LayoutRootNode* root = [[[LayoutRootNode alloc] initWithHandler:self view:newWindow.contentView] autorelease];
     root.autoRemovedWhenEmpty = YES;
