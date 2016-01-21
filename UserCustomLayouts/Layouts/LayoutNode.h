@@ -17,6 +17,7 @@ typedef enum : NSUInteger {
 } LayoutAlignment;
 
 extern const NSSize LayoutMinSize;
+extern const CGFloat LayoutSpaceBetween;
 
 @interface LayoutNode : NSObject
 {
