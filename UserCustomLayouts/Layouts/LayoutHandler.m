@@ -81,13 +81,13 @@
 - (BOOL)changeFirstResponsedRootIfNeeded:(NSPoint)locatioInScreen
 {
     for (int i=0; i<_rootList.count; i++) {
-        if (NSPointInRect(locatioInScreen, _rootList[i].view.window.frame)) {
+        if (NSPointInRect(locatioInScreen, _rootList[i].containerWindow.frame)) {
             if (i > 0) {
                 LayoutRootNode* root = [_rootList[i] retain];
                 [_rootList removeObjectAtIndex:i];
                 [_rootList insertObject:root atIndex:0];
                 [root release];
-                [root.view.window makeKeyAndOrderFront:nil];
+                [root.containerWindow makeKeyAndOrderFront:nil];
 //                NSLog(@"root change");
                 return YES;
             }
@@ -129,42 +129,6 @@
     }
 }
 
-- (void)handleResizeEvent:(LayoutView *)view variation:(float)variation direction:(LayoutRelativeDirection)dir
-{
-    LayoutNode* targetNode = [self findAssociatedNode:view];
-    if (targetNode == nil) {
-        //TODO targetView isn't in the tree
-        return;
-    }
-    LayoutNode* resizeNode = nil;
-    while (targetNode != nil && targetNode.parentNode != targetNode.root) {
-        if ((targetNode.parentNode.align & dir) > 0) {
-            //filter node's edge
-            unsigned long idx = [targetNode.parentNode.subNodes indexOfObject:targetNode];
-            if ((dir & 0b0100) > 0) {
-                if (idx < targetNode.parentNode.subNodes.count-1) {//not the last
-                    resizeNode = targetNode;
-                    break;
-                }
-            }
-            else {
-                if (idx > 0) {//not the first
-                    resizeNode = targetNode;
-                    break;
-                }
-            }
-        }
-        targetNode = targetNode.parentNode;
-    }
-    if (resizeNode != nil) {
-        [resizeNode.parentNode resizeSubNode:resizeNode variation:variation direction:dir];
-    }
-    else {
-        //TODO cannot find node to resize
-        NSLog(@"cannot find node to resize");
-    }
-}
-
 - (void)addLayoutView:(LayoutView *)layoutView to:(LayoutView *)targetView direction:(LayoutRelativeDirection)dir size:(NSSize)size
 {
     if ([self findAssociatedNode:layoutView] != nil) {
@@ -193,14 +157,15 @@
         return;
     }
     
-    if (layoutView.superview != targetNode.root.view) {
+    if (layoutView.superview != targetNode.root.containerView) {
         [layoutView removeFromSuperview];
-        [targetNode.root.view addSubview:layoutView];
+        [targetNode.root.containerView addSubview:layoutView];
     }
     
     LayoutContentNode* subNode = [[[LayoutContentNode alloc] initWithHandler:self view:layoutView] autorelease];
     [_viewMap setObject:subNode forKey:[NSNumber numberWithUnsignedLong:layoutView.layoutIdentifier]];//add relationship to viewmap
     
+    LayoutRootNode *rootNode = [targetNode.root retain];
     if ((targetNode.align & dir) > 0) {
         [targetNode addSubNode:subNode direction:dir size:size relativeNode:relativeNode];
     }
@@ -213,6 +178,8 @@
         [combineNode addSubNode:subNode direction:dir size:size relativeNode:relativeNode];
         [targetNode release];
     }
+    [rootNode resetResizeRects];
+    [rootNode release];
 }
 
 - (void)removeLayoutView:(LayoutView *)layoutView
@@ -224,14 +191,14 @@
     }
     
     [layoutView removeFromSuperview];
-    
+    LayoutRootNode *rootNode = [node.root retain];
     LayoutNode* parentNode = node.parentNode;
     [_viewMap removeObjectForKey:[NSNumber numberWithUnsignedLong:layoutView.layoutIdentifier]];//remove relationship from viewmap
     [node removeFromParent];//rootNode's virtualNode do nothing
     
     if (parentNode.parentNode == parentNode.root) {//root's virtualNode
         if (parentNode.root.autoRemovedWhenEmpty == YES && parentNode.subNodes.count == 0) {
-            [parentNode.root.view.window close];
+            [parentNode.root.containerWindow close];
         }
     }
     //subNodes.count would not be 0 expect virtualNode, just check 1
@@ -240,6 +207,8 @@
         [parentNode.parentNode replaceNode:parentNode withNode:parentNode.subNodes[0]];
         [parentNode release];
     }
+    [rootNode resetResizeRects];
+    [rootNode release];
 }
 
 - (void)createNewLayoutWindow:(LayoutView *)layoutView location:(NSPoint)locationInScreen
@@ -283,7 +252,7 @@
     
     NSPoint locationInScreen = NSPointFromWindowToScreen(_dragSender.window, locationInWindow);
     [self changeFirstResponsedRootIfNeeded:locationInScreen];
-    NSPoint locationInResponsedRootWindow = NSPointFromScreenToWindow(self.firstResponsedRoot.view.window, locationInScreen);
+    NSPoint locationInResponsedRootWindow = NSPointFromScreenToWindow(self.firstResponsedRoot.containerWindow, locationInScreen);
     
     LayoutNode* targetNode = [self findeFirstResponsedNode:locationInResponsedRootWindow];//return targetNode or rootNode
     if (_focusedNode != targetNode) {
@@ -296,7 +265,7 @@
     
     BOOL processed = NO;
     if (_focusedNode != nil) {
-        NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:locationInResponsedRootWindow fromView:nil];
+        NSPoint convertedLocation = [self.firstResponsedRoot.containerView convertPoint:locationInResponsedRootWindow fromView:nil];
         LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation locInScreen:locationInScreen panel:_draggingPanel];
         processed = [_focusedNode.responser onLayoutDragMove:event];
     }
@@ -324,20 +293,22 @@
     
     NSPoint locationInScreen = NSPointFromWindowToScreen(_dragSender.window, locationInWindow);
     [self changeFirstResponsedRootIfNeeded:locationInScreen];
-    NSPoint locationInResponsedRootWindow = NSPointFromScreenToWindow(self.firstResponsedRoot.view.window, locationInScreen);
+    NSPoint locationInResponsedRootWindow = NSPointFromScreenToWindow(self.firstResponsedRoot.containerWindow, locationInScreen);
     
     BOOL processed = NO;
     if (_focusedNode != nil) {
-        NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:locationInResponsedRootWindow fromView:nil];
+        NSPoint convertedLocation = [self.firstResponsedRoot.containerView convertPoint:locationInResponsedRootWindow fromView:nil];
         LayoutDragEvent* event = [LayoutDragEvent eventWithSender:_dragSender location:convertedLocation locInScreen:locationInScreen panel:_draggingPanel];
         processed = [_focusedNode.responser onLayoutDragEndInside:event];
     }
     
     if (processed == NO) {
         //create new window
+        NSWindow* senderWindow = [_dragSender.window retain];
         LayoutView* view = [_dragSender layoutWillMove];
+        [senderWindow resetCursorRects];//reset cursorRects before change key window
+        [senderWindow release];
         if (view != nil) {
-            [self.firstResponsedRoot.view.window resetCursorRects];//reset cursorRects before change key window
             [self createNewLayoutWindow:view location:locationInScreen];
         }
     }
@@ -379,7 +350,7 @@
     }
     else {
         for (int i=0; i<_rootList.count; i++) {
-            if (notification.object == _rootList[i].view.window) {
+            if (notification.object == _rootList[i].containerWindow) {
                 NSMutableArray<LayoutNode*>* nodes = [NSMutableArray arrayWithArray:_rootList[i].virtualNode.subNodes];
                 while (nodes.count > 0) {
                     if (nodes[0].subNodes.count > 0) {
@@ -405,7 +376,7 @@
 
 - (LayoutNode*)findeFirstResponsedNode:(NSPoint)location
 {
-    NSPoint convertedLocation = [self.firstResponsedRoot.view convertPoint:location fromView:nil];
+    NSPoint convertedLocation = [self.firstResponsedRoot.containerView convertPoint:location fromView:nil];
     LayoutNode* node = [self findResponsedNode:convertedLocation node:self.firstResponsedRoot];
     return node!=nil?node:self.firstResponsedRoot;
 }

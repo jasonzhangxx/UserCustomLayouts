@@ -105,7 +105,7 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
     [str drawAtPoint:NSZeroPoint withAttributes:nil];
 }
 
-- (id)initWithHandler:(LayoutHandler *)handler view:(NSView<TabLayoutContentInterface> *)view
+- (instancetype)initWithHandler:(LayoutHandler *)handler
 {
     self = [super initWithHandler:handler];
     if(self) {
@@ -115,7 +115,14 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
         
         _tabView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 400, TabbarHeight)] autorelease];
         [self addSubview:_tabView];
-        
+    }
+    return self;
+}
+
+- (instancetype)initWithHandler:(LayoutHandler *)handler view:(NSView<TabLayoutContentInterface> *)view
+{
+    self = [self initWithHandler:handler];
+    if(self) {
         [self insertContentView:view index:0 highlighted:YES];
     }
     return self;
@@ -247,7 +254,7 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
 - (void)formatTabs
 {
     NSSize tabSize = [self getTabSize];
-    for (int i=0,max=(int)_tabs.count; i<max; i++) {
+    for (int i=0; i<_tabs.count; i++) {
         NSInteger displayIdx = [self getTabDisplayIndex:_tabs[i]];
         if(displayIdx != NSNotFound) {
             [_tabs[i] setFrame:NSMakeRect(tabSize.width*displayIdx, 0, tabSize.width, tabSize.height)];
@@ -334,6 +341,7 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
     view.frame = self.bounds;
     
     [self checkRemoveIfNoChild];
+    [self.window resetCursorRects];//protect cursor rects error
     return view;
 }
 
@@ -345,6 +353,7 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
     [self setDraggingTab:nil];
     
     [self checkRemoveIfNoChild];
+    [self.window resetCursorRects];//protect cursor rects error
     return contentView;
 }
 

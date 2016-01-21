@@ -250,7 +250,7 @@ static NSUInteger layoutIdx = 0;
         return;
     }
     
-    if (variation<0) {//缩小node = 放大临近node
+    if (variation<0) {//zoom out node = zoom in next node
         [self resizeSubNodeWithIndex:index+pace expandVariation:-variation pace:-pace isHorizontal:isHorizontal];
         return;
     }
@@ -311,19 +311,19 @@ static NSUInteger layoutIdx = 0;
     
     switch (direction) {
         case LayoutRelativeDirectionLeft: {
-            [self resizeSubNodeWithIndex:idx expandVariation:-variation pace:-1 isHorizontal:YES];
+            [self resizeSubNodeWithIndex:idx expandVariation:variation pace:-1 isHorizontal:YES];
             break;
         }
         case LayoutRelativeDirectionRight: {
-            [self resizeSubNodeWithIndex:idx expandVariation:-variation pace:1 isHorizontal:YES];
+            [self resizeSubNodeWithIndex:idx expandVariation:variation pace:1 isHorizontal:YES];
             break;
         }
         case LayoutRelativeDirectionBottom: {
-            [self resizeSubNodeWithIndex:idx expandVariation:-variation pace:-1 isHorizontal:NO];
+            [self resizeSubNodeWithIndex:idx expandVariation:variation pace:-1 isHorizontal:NO];
             break;
         }
         case LayoutRelativeDirectionTop: {
-            [self resizeSubNodeWithIndex:idx expandVariation:-variation pace:1 isHorizontal:NO];
+            [self resizeSubNodeWithIndex:idx expandVariation:variation pace:1 isHorizontal:NO];
             break;
         }
         default:

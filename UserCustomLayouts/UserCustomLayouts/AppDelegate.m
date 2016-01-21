@@ -75,9 +75,21 @@
     content2.title = @"Content 2";
     TestView* content3 = [[[TestView alloc] init] autorelease];
     content3.title = @"Content 3";
+    TestView* content4 = [[[TestView alloc] init] autorelease];
+    content4.title = @"Content 4";
+    TestView* content5 = [[[TestView alloc] init] autorelease];
+    content5.title = @"Content 5";
+    TestView* content6 = [[[TestView alloc] init] autorelease];
+    content6.title = @"Content 6";
+    TestView* content7 = [[[TestView alloc] init] autorelease];
+    content7.title = @"Content 7";
     TabLayoutView *tabView1 = [[[TabLayoutView alloc] initWithHandler:_hanlder view:content1] autorelease];
     [tabView1 insertContentView:content2 index:0 highlighted:YES];
     [tabView1 insertContentView:content3 index:0 highlighted:YES];
+    [tabView1 insertContentView:content4 index:0 highlighted:YES];
+    [tabView1 insertContentView:content5 index:0 highlighted:YES];
+    [tabView1 insertContentView:content6 index:0 highlighted:YES];
+    [tabView1 insertContentView:content7 index:0 highlighted:YES];
     [_hanlder addLayoutView:tabView1 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionLeft size:NSZeroSize relativeNode:nil];
     
 

@@ -18,9 +18,6 @@ extern const float LayoutPlacedInitializeProportion;
     NSUInteger _id;
     
     LayoutHandler* _handler;
-    BOOL _resizing;
-    NSPoint _mouseDownRelativeLocation;
-    LayoutRelativeDirection _resizeDirection;
 }
 
 @property (nonatomic, readonly) NSUInteger layoutIdentifier;
@@ -29,6 +26,8 @@ extern const float LayoutPlacedInitializeProportion;
 -(instancetype)initWithHandler:(LayoutHandler*)handler;
 
 -(NSSize)layoutMinSize;
+-(LayoutRelativeDirection)checkLayoutPlacedDirection:(NSPoint)location outspread:(CGFloat)outspread;
+-(NSRect)getPlacedFrame:(LayoutRelativeDirection)direction;
 -(BOOL)checkDragSenderIsSelf:(LayoutDragEvent*)event;
 
 @end

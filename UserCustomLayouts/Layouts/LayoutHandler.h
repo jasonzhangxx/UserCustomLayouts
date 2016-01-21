@@ -79,7 +79,6 @@ typedef enum : NSUInteger {
 -(LayoutRootNode*)firstResponsedRoot;
 
 -(void)handleMouseEvent:(LayoutView*)sender type:(LayoutDragState)type location:(NSPoint) locationInWindow;
--(void)handleResizeEvent:(LayoutView*)view variation:(float)variation direction:(LayoutRelativeDirection)dir;
 
 -(void)addLayoutView:(LayoutView*)layoutView to:(LayoutView*)targetView direction:(LayoutRelativeDirection)dir size:(NSSize)size;
 -(void)addLayoutView:(LayoutView*)layoutView toNode:(LayoutNode*)targetNode direction:(LayoutRelativeDirection)dir size:(NSSize)size relativeNode:(LayoutNode*)relativeNode;

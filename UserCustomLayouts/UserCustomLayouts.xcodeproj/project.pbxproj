@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F2138D61C50B844001479EE /* RootLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F2138D51C50B844001479EE /* RootLayoutView.m */; settings = {ASSET_TAGS = (); }; };
 		969371331C3E1BE500394DC7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 969371321C3E1BE500394DC7 /* AppDelegate.m */; };
 		969371361C3E1BE500394DC7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 969371351C3E1BE500394DC7 /* main.m */; };
 		969371381C3E1BE500394DC7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 969371371C3E1BE500394DC7 /* Assets.xcassets */; };
@@ -32,6 +33,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1F2138D41C50B844001479EE /* RootLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RootLayoutView.h; path = Layouts/RootLayoutView.h; sourceTree = "<group>"; };
+		1F2138D51C50B844001479EE /* RootLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RootLayoutView.m; path = Layouts/RootLayoutView.m; sourceTree = "<group>"; };
 		9693712E1C3E1BE500394DC7 /* UserCustomLayouts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UserCustomLayouts.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		969371311C3E1BE500394DC7 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		969371321C3E1BE500394DC7 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -144,6 +147,8 @@
 			children = (
 				969371681C3E1CD200394DC7 /* LayoutView.h */,
 				9693715C1C3E1CBE00394DC7 /* LayoutView.m */,
+				1F2138D41C50B844001479EE /* RootLayoutView.h */,
+				1F2138D51C50B844001479EE /* RootLayoutView.m */,
 				9693715D1C3E1CBE00394DC7 /* TabLayoutContentInterface.h */,
 				9693715E1C3E1CBE00394DC7 /* TabLayoutView.h */,
 				9693715F1C3E1CBE00394DC7 /* TabLayoutView.m */,
@@ -265,6 +270,7 @@
 			files = (
 				969371611C3E1CBE00394DC7 /* TabLayoutView.m in Sources */,
 				969371661C3E1CCB00394DC7 /* LayoutDraggingPanel.m in Sources */,
+				1F2138D61C50B844001479EE /* RootLayoutView.m in Sources */,
 				969371361C3E1BE500394DC7 /* main.m in Sources */,
 				969371331C3E1BE500394DC7 /* AppDelegate.m in Sources */,
 				969371601C3E1CBE00394DC7 /* LayoutView.m in Sources */,
@@ -453,6 +459,7 @@
 				9693714C1C3E1BE600394DC7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9693714D1C3E1BE600394DC7 /* Build configuration list for PBXNativeTarget "UserCustomLayoutsTests" */ = {
 			isa = XCConfigurationList;
@@ -461,6 +468,7 @@
 				9693714F1C3E1BE600394DC7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
