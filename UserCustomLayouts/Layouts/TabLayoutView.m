@@ -26,6 +26,7 @@ const float TabbarHeight = 18;
 - (void)dealloc
 {
     [_contentView release];
+    [_tempTitle release];
     [super dealloc];
 }
 
@@ -42,6 +43,13 @@ const float TabbarHeight = 18;
 - (void)setHighlighted:(BOOL)highlighted
 {
     _highlighted = highlighted;
+    [self setNeedsDisplay:YES];
+}
+
+- (void)setTempTitle:(NSString *)tempTitle
+{
+    [_tempTitle release];
+    _tempTitle = [tempTitle copy];
     [self setNeedsDisplay:YES];
 }
 
