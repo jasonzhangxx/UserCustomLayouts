@@ -62,6 +62,11 @@ static NSUInteger layoutViewIdx = 0;
     return event.sender == self;
 }
 
+-(NSView*)getPlacedDisplayView
+{
+    return nil;
+}
+
 #pragma mark - layout sender delegate
 - (LayoutView*)layoutWillMove
 {
@@ -142,7 +147,7 @@ static NSUInteger layoutViewIdx = 0;
     else {
         LayoutRelativeDirection direction = [self checkLayoutPlacedDirection:event.location outspread:0];
         if (direction != LayoutRelativeDirectionNone) {
-            [event.panel placeToView:self frame:[self getPlacedFrame:direction] contentView:nil];
+            [event.panel placeToView:self frame:[self getPlacedFrame:direction] contentView:[event.sender getPlacedDisplayView]];
             return YES;
         }
         else {

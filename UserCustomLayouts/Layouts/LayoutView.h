@@ -16,7 +16,6 @@ extern const float LayoutPlacedInitializeProportion;
 @interface LayoutView : NSView <LayoutDragSenderDelegate, LayoutDragResponserDelegate>
 {
     NSUInteger _id;
-    
     LayoutHandler* _handler;
 }
 
@@ -29,5 +28,6 @@ extern const float LayoutPlacedInitializeProportion;
 -(LayoutRelativeDirection)checkLayoutPlacedDirection:(NSPoint)location outspread:(CGFloat)outspread;
 -(NSRect)getPlacedFrame:(LayoutRelativeDirection)direction;
 -(BOOL)checkDragSenderIsSelf:(LayoutDragEvent*)event;
+-(NSView*)getPlacedDisplayView;
 
 @end

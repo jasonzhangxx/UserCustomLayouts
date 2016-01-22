@@ -14,20 +14,6 @@ const float TabbarHeight = 18;
 
 @implementation TabLayoutViewTab
 
-static TabLayoutViewTab* s_tempDraggingTab = nil;
-+ (void)initialize
-{
-    if (self == [TabLayoutViewTab class]) {
-        s_tempDraggingTab = [[TabLayoutViewTab alloc] init];
-        [s_tempDraggingTab setHighlighted:YES];
-    }
-}
-
-+ (instancetype)sharedTempTab
-{
-    return s_tempDraggingTab;
-}
-
 - (instancetype)initWithContentView:(NSView<TabLayoutContentInterface> *)view
 {
     self = [super init];
@@ -45,8 +31,8 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
 
 - (NSString*)tabTitle
 {
-    if(_contentView == nil) {
-        return _title;
+    if(_tempTitle != nil) {
+        return _tempTitle;
     }
     else {
         return [_contentView layoutTitle];
@@ -63,10 +49,6 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
 {
     if (_highlighted) {
         NSBezierPath* path = [NSBezierPath bezierPathWithRect:self.bounds];
-        //border
-        [[NSColor colorWithRed:0 green:0 blue:0 alpha:.5] set];
-        [path stroke];
-        //fill
         NSGradient *gradient = [[NSGradient alloc] initWithStartingColor:[NSColor colorWithCalibratedRed:.9 green:.9 blue:.9 alpha:1] endingColor:[NSColor colorWithCalibratedRed:.84 green:.84 blue:.84 alpha:1]];
         [gradient drawInBezierPath:path angle:-90];
     }
@@ -104,6 +86,23 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
 
 @synthesize draggingTab = _draggingTab;
 
+static TabLayoutView* s_placedDisplayView = nil;
+static TabLayoutViewTab* s_placedDisplayTab = nil;
++ (void)initialize
+{
+    if (self == [TabLayoutView class]) {
+        s_placedDisplayView = [[TabLayoutView alloc] initWithHandler:nil];
+        [s_placedDisplayView insertContentView:(NSView<TabLayoutContentInterface>*)[[[NSView alloc] init] autorelease] index:0 highlighted:YES];
+        s_placedDisplayTab = s_placedDisplayView.tabs[0];
+    }
+}
+
++ (instancetype)sharedPlacedDisplayViewWithTitle:(NSString*)title
+{
+    s_placedDisplayTab.tempTitle = title;
+    return s_placedDisplayView;
+}
+
 - (instancetype)initWithHandler:(LayoutHandler *)handler
 {
     self = [super initWithHandler:handler];
@@ -112,8 +111,15 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
         _tabs = [[NSMutableArray alloc] init];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onViewDidResize:) name:NSViewFrameDidChangeNotification object:nil];
         
-        _tabView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 400, TabbarHeight)] autorelease];
+        _tabView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, TabbarHeight)] autorelease];
         [self addSubview:_tabView];
+        _contentView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
+        [self addSubview:_contentView];
+        
+        [self setWantsLayer:YES];
+        [self.layer setBackgroundColor:[[NSColor colorWithRed:.76 green:.76 blue:.76 alpha:1] CGColor]];
+        [self.layer setBorderWidth:1];
+        [self.layer setBorderColor:[[NSColor colorWithRed:0 green:0 blue:0 alpha:.7] CGColor]];
     }
     return self;
 }
@@ -134,29 +140,12 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
     [super dealloc];
 }
 
-- (void)drawRect:(NSRect)aRect
-{
-    NSRect contentRect = NSMakeRect(1, 1, self.bounds.size.width-2, self.bounds.size.height-TabbarHeight-1);
-    NSBezierPath* path = [NSBezierPath bezierPathWithRect:contentRect];
-    path.lineWidth = .5;
-    //fill
-    [[NSColor colorWithRed:.76 green:.76 blue:.76 alpha:1] set];
-    [path fill];
-    //border
-    [[NSColor colorWithRed:0 green:0 blue:0 alpha:1] set];
-    [path stroke];
-}
-
-- (BOOL)checkDragSenderIsSelf:(LayoutDragEvent *)event
-{
-    return event.sender == self && _tabs.count <= 1;
-}
-
 - (void)onViewDidResize:(NSNotification*)noti
 {
     if(noti.object == self) {
         [_selectedTab.contentView setFrame:NSMakeRect(0, 0, self.bounds.size.width, self.bounds.size.height-_tabView.frame.size.height)];
         [_tabView setFrame:NSMakeRect(0, self.bounds.size.height-TabbarHeight, self.bounds.size.width, TabbarHeight)];
+        [_contentView setFrame:NSMakeRect(0, 0, self.bounds.size.width, self.bounds.size.height-TabbarHeight)];
         [self formatTabs];
     }
 }
@@ -177,6 +166,16 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
     return size;
 }
 
+- (BOOL)checkDragSenderIsSelf:(LayoutDragEvent *)event
+{
+    return event.sender == self && _tabs.count <= 1;
+}
+
+-(NSView*)getPlacedDisplayView
+{
+    return [TabLayoutView sharedPlacedDisplayViewWithTitle:_draggingTab.tabTitle];
+}
+
 - (NSArray*)tabs
 {
     return _tabs;
@@ -186,11 +185,11 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
 {
     if (tab != _selectedTab) {
         _selectedTab.highlighted = NO;
-        _selectedTab.contentView.hidden = YES;
+        [_selectedTab.contentView removeFromSuperview];
         
         _selectedTab = tab;
         _selectedTab.highlighted = YES;
-        _selectedTab.contentView.hidden = NO;
+        [_contentView addSubview:_selectedTab.contentView];
         [_selectedTab.contentView setFrame:NSMakeRect(0, 0, self.bounds.size.width, self.bounds.size.height-_tabView.frame.size.height)];
     }
 }
@@ -221,12 +220,12 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
     tab.delegate = self;
     [_tabs insertObject:tab atIndex:index];
     [_tabView addSubview:tab];
-    view.hidden = YES;
-    [self addSubview:view];
-    [self formatTabs];
     
     if (highlighted == YES) {
         [self setSelectedTab:tab];
+    }
+    else {
+        [self formatTabs];
     }
     [self.window resetCursorRects];//protect cursor rects error
 }
@@ -238,13 +237,16 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
         return;
     }
     
-    [tab.contentView removeFromSuperview];
+    [tab retain];
     [tab removeFromSuperview];
     [_tabs removeObject:tab];
-    [self formatTabs];
     if (tab == _selectedTab && _tabs.count > 0) {
         [self setSelectedTab:_tabs[0]];
     }
+    else {
+        [self formatTabs];
+    }
+    [tab release];
 }
 
 - (void)reorderTab:(TabLayoutViewTab *)tab index:(NSInteger)index highlighted:(BOOL)highlighted
@@ -296,19 +298,18 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
         return displayIndex;
     }
     else {
-        NSInteger correction = 0;
         if(_draggingTab != nil) {//draggingTab correct
             NSInteger draggingIdx = [_tabs indexOfObject:_draggingTab];
             if (displayIndex > draggingIdx) {
-                correction += -1;
+                displayIndex += -1;
             }
         }
         if (_insertedTabIndex != -1) {//insertedTab correct
             if (displayIndex >= _insertedTabIndex) {
-                correction += 1;
+                displayIndex += 1;
             }
         }
-        return displayIndex+correction;
+        return displayIndex;
     }
 }
 
@@ -405,8 +406,7 @@ static TabLayoutViewTab* s_tempDraggingTab = nil;
             [self setTempInsertedTabIndex:idx];
             NSSize tabSize = [self getTabSize];
             NSPoint tabLocation = [self convertPoint:event.location fromView:nil];
-            [TabLayoutViewTab sharedTempTab].title = ((TabLayoutView*)event.sender).draggingTab.tabTitle;
-            [event.panel placeToView:self frame:NSMakeRect(MIN(self.frame.size.width-tabSize.width,MAX(0,tabLocation.x-tabSize.width/2.0)), _tabView.frame.origin.y, tabSize.width, tabSize.height) contentView:[TabLayoutViewTab sharedTempTab]];
+            [event.panel placeToView:self frame:NSMakeRect(MIN(self.frame.size.width-tabSize.width,MAX(0,tabLocation.x-tabSize.width/2.0)), _tabView.frame.origin.y, tabSize.width, tabSize.height) contentView:[event.sender getPlacedDisplayView]];
             return YES;
         }
         else {
