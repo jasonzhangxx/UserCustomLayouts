@@ -232,9 +232,7 @@ static TabLayoutViewTab* s_placedDisplayTab = nil;
     if (highlighted == YES) {
         [self setSelectedTab:tab];
     }
-    else {
-        [self formatTabs];
-    }
+    [self formatTabs];
     [self.window resetCursorRects];//protect cursor rects error
 }
 
@@ -251,9 +249,7 @@ static TabLayoutViewTab* s_placedDisplayTab = nil;
     if (tab == _selectedTab && _tabs.count > 0) {
         [self setSelectedTab:_tabs[0]];
     }
-    else {
-        [self formatTabs];
-    }
+    [self formatTabs];
     [tab release];
 }
 

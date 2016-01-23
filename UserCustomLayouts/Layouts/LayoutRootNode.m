@@ -20,7 +20,7 @@
         _containerView = [view retain];
         _root = self;
         _virtualNode = [[[LayoutNode alloc] initWithHandler:handler] autorelease];
-        [super addSubNode:_virtualNode direction:LayoutRelativeDirectionBottom size:NSZeroSize];
+        [super addSubNode:_virtualNode direction:LayoutRelativeDirectionBottom size:NSZeroSize relativeNode:nil];
         _rootView = [[[RootLayoutView alloc] initWithHandler:_handler] autorelease];
         _rootView.rootNode = self;
         [_containerView addSubview:_rootView];
@@ -56,14 +56,14 @@
     [self resetResizeRects];
 }
 
--(void)addSubNode:(LayoutNode*)node direction:(LayoutRelativeDirection)direction relativeNode:(LayoutNode *)relativeNode
+-(void)addSubNode:(LayoutNode *)node direction:(LayoutRelativeDirection)direction size:(NSSize)size relativeNode:(LayoutNode *)relativeNode
 {
-    //do nothing
+    [_virtualNode addSubNode:node direction:direction size:size relativeNode:relativeNode];
 }
 
 -(void)removeSubNode:(LayoutNode*)node
 {
-    //do nothing
+    [_virtualNode removeSubNode:node];
 }
 
 -(void)replaceNode:(LayoutNode*)node withNode:(LayoutNode*)newNode

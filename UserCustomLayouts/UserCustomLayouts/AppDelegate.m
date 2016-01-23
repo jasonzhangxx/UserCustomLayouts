@@ -75,7 +75,7 @@
     [tabView1 insertContentView:content5 index:0 highlighted:YES];
     [tabView1 insertContentView:content6 index:0 highlighted:YES];
     [tabView1 insertContentView:content7 index:0 highlighted:YES];
-    [_hanlder addLayoutView:tabView1 toNode:_hanlder.rootList[0].virtualNode direction:LayoutRelativeDirectionLeft size:NSZeroSize relativeNode:nil];
+    [_hanlder addLayoutView:tabView1 toNode:_hanlder.firstResponsedRoot direction:LayoutRelativeDirectionLeft size:NSZeroSize relativeNode:nil];
     
 
 }
