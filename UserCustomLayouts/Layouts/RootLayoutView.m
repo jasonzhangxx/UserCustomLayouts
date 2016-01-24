@@ -178,7 +178,7 @@ static CGFloat outspreadWidth = 24;
     if (_rootNode.virtualNode.subNodes.count == 0) {
         NSPoint locationInView = [self convertPoint:event.location fromView:self.superview];
         if (NSPointInRect(locationInView, self.bounds) == YES) {
-            [event.panel placeToView:self frame:self.bounds contentView:nil];
+            [event.panel placeToView:self frame:self.bounds contentView:[event.sender getPlacedDisplayView]];
             return YES;
         }
         else {
@@ -188,7 +188,7 @@ static CGFloat outspreadWidth = 24;
     else {
         LayoutRelativeDirection direction = [self checkLayoutPlacedDirection:event.location outspread:outspreadWidth];
         if (direction != LayoutRelativeDirectionNone) {
-            [event.panel placeToView:self frame:[self getPlacedFrame:direction] contentView:nil];
+            [event.panel placeToView:self frame:[self getPlacedFrame:direction] contentView:[event.sender getPlacedDisplayView]];
             return YES;
         }
         else {
