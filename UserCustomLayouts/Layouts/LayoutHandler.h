@@ -34,9 +34,10 @@ typedef enum : NSUInteger {
 
 @property(nonatomic, assign) LayoutView* sender;
 @property(nonatomic, assign) NSPoint location;//location in rootView
+@property(nonatomic, assign) NSPoint locationInScreen;//location in screen
 @property(nonatomic, assign) LayoutDraggingPanel* panel;
 
-+(LayoutDragEvent*)eventWithSender:(LayoutView*)sender location:(NSPoint)location panel:(LayoutDraggingPanel*)panel;
++(LayoutDragEvent*)eventWithSender:(LayoutView*)sender location:(NSPoint)location locInScreen:(NSPoint)locInScreen panel:(LayoutDraggingPanel*)panel;
 
 @end
 
@@ -78,7 +79,6 @@ typedef enum : NSUInteger {
 -(LayoutRootNode*)firstResponsedRoot;
 
 -(void)handleMouseEvent:(LayoutView*)sender type:(LayoutDragState)type location:(NSPoint) locationInWindow;
--(void)handleResizeEvent:(LayoutView*)view variation:(float)variation direction:(LayoutRelativeDirection)dir;
 
 -(void)addLayoutView:(LayoutView*)layoutView to:(LayoutView*)targetView direction:(LayoutRelativeDirection)dir size:(NSSize)size;
 -(void)addLayoutView:(LayoutView*)layoutView toNode:(LayoutNode*)targetNode direction:(LayoutRelativeDirection)dir size:(NSSize)size relativeNode:(LayoutNode*)relativeNode;

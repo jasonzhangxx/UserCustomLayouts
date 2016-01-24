@@ -13,6 +13,7 @@
 @implementation LayoutNode
 
 const NSSize LayoutMinSize = {80, 80};
+const CGFloat LayoutSpaceBetween = 4;
 
 static NSUInteger layoutIdx = 0;
 
@@ -83,6 +84,7 @@ static NSUInteger layoutIdx = 0;
                 }
                 size.height += s.height;
             }];
+            size.height += (_subNodes.count-1)*LayoutSpaceBetween;
         }
         else if (_align == LayoutAlignmentHorizontal) {
             [_subNodes enumerateObjectsUsingBlock:^(LayoutNode * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -92,6 +94,7 @@ static NSUInteger layoutIdx = 0;
                 }
                 size.width += s.width;
             }];
+            size.width += (_subNodes.count-1)*LayoutSpaceBetween;
         }
         else {
             size = _subNodes[0].minSize;
@@ -247,7 +250,7 @@ static NSUInteger layoutIdx = 0;
         return;
     }
     
-    if (variation<0) {//缩小node = 放大临近node
+    if (variation<0) {//zoom out node = zoom in next node
         [self resizeSubNodeWithIndex:index+pace expandVariation:-variation pace:-pace isHorizontal:isHorizontal];
         return;
     }
@@ -308,19 +311,19 @@ static NSUInteger layoutIdx = 0;
     
     switch (direction) {
         case LayoutRelativeDirectionLeft: {
-            [self resizeSubNodeWithIndex:idx expandVariation:-variation pace:-1 isHorizontal:YES];
+            [self resizeSubNodeWithIndex:idx expandVariation:variation pace:-1 isHorizontal:YES];
             break;
         }
         case LayoutRelativeDirectionRight: {
-            [self resizeSubNodeWithIndex:idx expandVariation:-variation pace:1 isHorizontal:YES];
+            [self resizeSubNodeWithIndex:idx expandVariation:variation pace:1 isHorizontal:YES];
             break;
         }
         case LayoutRelativeDirectionBottom: {
-            [self resizeSubNodeWithIndex:idx expandVariation:-variation pace:-1 isHorizontal:NO];
+            [self resizeSubNodeWithIndex:idx expandVariation:variation pace:-1 isHorizontal:NO];
             break;
         }
         case LayoutRelativeDirectionTop: {
-            [self resizeSubNodeWithIndex:idx expandVariation:-variation pace:1 isHorizontal:NO];
+            [self resizeSubNodeWithIndex:idx expandVariation:variation pace:1 isHorizontal:NO];
             break;
         }
         default:
@@ -342,10 +345,11 @@ static NSUInteger layoutIdx = 0;
         }
         case LayoutAlignmentVertical:
         {
-            __block float totalHeight = 0;
+            __block CGFloat totalHeight = 0;
             [_subNodes enumerateObjectsUsingBlock:^(LayoutNode * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                 totalHeight += obj.frame.size.height;
             }];
+            CGFloat newHeight = _frame.size.height - (_subNodes.count-1)*LayoutSpaceBetween;
             NSPoint origin = _frame.origin;
             for (int i=0; i<_subNodes.count; i++) {
                 LayoutNode* obj = _subNodes[i];
@@ -354,7 +358,7 @@ static NSUInteger layoutIdx = 0;
                     height = _frame.origin.y+_frame.size.height-origin.y;
                 }
                 else {
-                    height = obj.frame.size.height/totalHeight*_frame.size.height;
+                    height = obj.frame.size.height/totalHeight*newHeight;
                 }
                 NSSize minSize = obj.minSize;
                 if (height < minSize.height) {
@@ -362,16 +366,17 @@ static NSUInteger layoutIdx = 0;
                 }
                 NSRect rect = NSMakeRect(origin.x, origin.y, _frame.size.width, height);
                 [_subNodes[i] setFrame:rect];
-                origin.y += height;
+                origin.y += height+LayoutSpaceBetween;
             }
             break;
         }
         case LayoutAlignmentHorizontal:
         {
-            __block float totalWidth = 0;
+            __block CGFloat totalWidth = 0;
             [_subNodes enumerateObjectsUsingBlock:^(LayoutNode * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                 totalWidth += obj.frame.size.width;
             }];
+            CGFloat newWidth = _frame.size.width - (_subNodes.count-1)*LayoutSpaceBetween;
             NSPoint origin = _frame.origin;
             for (int i=0; i<_subNodes.count; i++) {
                 LayoutNode* obj = _subNodes[i];
@@ -380,7 +385,7 @@ static NSUInteger layoutIdx = 0;
                     width = _frame.origin.x+_frame.size.width-origin.x;
                 }
                 else {
-                    width = obj.frame.size.width/totalWidth*_frame.size.width;
+                    width = obj.frame.size.width/totalWidth*newWidth;
                 }
                 NSSize minSize = obj.minSize;
                 if (width < minSize.width) {
@@ -388,7 +393,7 @@ static NSUInteger layoutIdx = 0;
                 }
                 NSRect rect = NSMakeRect(origin.x, origin.y, width, _frame.size.height);
                 [_subNodes[i] setFrame:rect];
-                origin.x += width;
+                origin.x += width+LayoutSpaceBetween;
             }
             break;
         }

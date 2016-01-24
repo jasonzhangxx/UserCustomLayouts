@@ -17,6 +17,7 @@ typedef enum : NSUInteger {
 } LayoutAlignment;
 
 extern const NSSize LayoutMinSize;
+extern const CGFloat LayoutSpaceBetween;
 
 @interface LayoutNode : NSObject
 {
@@ -48,6 +49,6 @@ extern const NSSize LayoutMinSize;
 -(void)removeSubNode:(LayoutNode*)node;
 -(void)removeFromParent;
 
--(void)resizeSubNode:(LayoutNode*)node variation:(CGFloat)variation direction:(LayoutRelativeDirection)direction;
+-(void)resizeSubNode:(LayoutNode*)node variation:(CGFloat)variation direction:(LayoutRelativeDirection)direction;//positive variation means zoom in
 
 @end

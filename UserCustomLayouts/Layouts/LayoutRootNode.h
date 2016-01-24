@@ -8,12 +8,20 @@
 
 #import "LayoutNode.h"
 
-@interface LayoutRootNode : LayoutNode<LayoutDragResponserDelegate>
+@class RootLayoutView;
+
+@interface LayoutRootNode : LayoutNode
+{
+    RootLayoutView* _rootView;
+}
 
 @property(nonatomic, assign) BOOL autoRemovedWhenEmpty;
-@property(nonatomic, readonly) NSView* view;
+@property(nonatomic, readonly) NSView* containerView;
+-(NSWindow*)containerWindow;
 @property(nonatomic, readonly) LayoutNode* virtualNode;
 
 -(instancetype)initWithHandler:(LayoutHandler*)handler view:(NSView*)view;
+
+- (void)resetResizeRects;
 
 @end
