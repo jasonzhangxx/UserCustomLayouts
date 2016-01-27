@@ -35,7 +35,7 @@
 /* Begin PBXFileReference section */
 		1F2138D41C50B844001479EE /* RootLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RootLayoutView.h; path = Layouts/RootLayoutView.h; sourceTree = "<group>"; };
 		1F2138D51C50B844001479EE /* RootLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RootLayoutView.m; path = Layouts/RootLayoutView.m; sourceTree = "<group>"; };
-		96234E721C58F9BA005E2383 /* LayoutDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LayoutDef.h; sourceTree = "<group>"; };
+		96234E961C58FCD5005E2383 /* LayoutDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LayoutDef.h; path = Layouts/LayoutDef.h; sourceTree = "<group>"; };
 		9693712E1C3E1BE500394DC7 /* UserCustomLayouts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UserCustomLayouts.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		969371311C3E1BE500394DC7 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		969371321C3E1BE500394DC7 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -133,9 +133,9 @@
 		969371501C3E1C7700394DC7 /* Layouts */ = {
 			isa = PBXGroup;
 			children = (
+				96234E961C58FCD5005E2383 /* LayoutDef.h */,
 				969371641C3E1CCB00394DC7 /* LayoutHandler.h */,
 				969371651C3E1CCB00394DC7 /* LayoutHandler.m */,
-				96234E721C58F9BA005E2383 /* LayoutDef.h */,
 				969371621C3E1CCB00394DC7 /* LayoutDraggingPanel.h */,
 				969371631C3E1CCB00394DC7 /* LayoutDraggingPanel.m */,
 				969371521C3E1C8C00394DC7 /* node */,
