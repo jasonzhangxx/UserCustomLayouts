@@ -11,6 +11,7 @@
 #import "LayoutNode.h"
 #import "LayoutRootNode.h"
 #import "LayoutContentNode.h"
+#import "LayoutDraggingPanel.h"
 
 @implementation LayoutDragEvent
 

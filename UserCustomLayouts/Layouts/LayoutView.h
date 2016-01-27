@@ -7,8 +7,9 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import "LayoutHandler.h"
+#import "LayoutDef.h"
 
+@class LayoutHandler;
 @class LayoutDragEvent;
 
 extern const float LayoutPlacedInitializeProportion;

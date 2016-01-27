@@ -8,6 +8,7 @@
 
 #import "RootLayoutView.h"
 #import "LayoutRootNode.h"
+#import "LayoutDraggingPanel.h"
 
 @implementation RootLayoutResizeRect
 

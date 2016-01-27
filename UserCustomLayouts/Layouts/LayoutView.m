@@ -8,6 +8,7 @@
 
 #import "LayoutView.h"
 #import "LayoutHandler.h"
+#import "LayoutDraggingPanel.h"
 
 @implementation LayoutView
 
