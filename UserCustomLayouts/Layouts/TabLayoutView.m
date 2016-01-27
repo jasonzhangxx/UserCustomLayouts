@@ -8,6 +8,7 @@
 
 #import "TabLayoutView.h"
 #import "LayoutHandler.h"
+#import "LayoutDraggingPanel.h"
 
 const float TabbarNormalWidth = 100;
 const float TabbarHeight = 18;
