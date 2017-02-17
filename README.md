@@ -1,6 +1,6 @@
-###UserCustomLayouts
+###User Custom Layouts
 
-A solution for user custom layouts. It's not something like "Auto Layouts". It makes the users using your application arrange their layouts by themselves. Also, it supports multiple windows.
+A solution for user custom layouts on Mac application. It's not something like "Auto Layouts". It makes the users can arrange their layouts by themselves. Also, it supports multiple windows.
 
 ####How to use
 
